@@ -1,5 +1,0 @@
-SECTION 109: The maximum rates applicable shall vary on the basis of the
-type of vehicle as follows:
-- less than 6 tonnes: 1 000 francs per truck and per trip;
-- 6 to 10 tonnes : 2 000 francs per truck and per trip;
-- more than 10 tonnes: 3 000 francs per truck and per trip.

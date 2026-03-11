@@ -1,7 +1,0 @@
-(7) The log book shall contain:
-- the number and date of the issue roll;
-- the business name or the names, surnames and address of the
-taxpayer;
-- the detailed amounts of the taxes and levies per beneficiary;
-- the number and dates of the payment and transfer receipts and, if
-need be, of payment orders.

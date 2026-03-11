@@ -1,2 +1,0 @@
-(1) In case of recompilation, entirely new electoral registers
-shall be drawn.

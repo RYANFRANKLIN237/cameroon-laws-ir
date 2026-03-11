@@ -1,4 +1,0 @@
-(1) ci-
-dessus ;
-- Créer d’autres Régions ; Dans ce cas, il leur attribue une
-dénomination et fixe leurs délimitations géographiques.

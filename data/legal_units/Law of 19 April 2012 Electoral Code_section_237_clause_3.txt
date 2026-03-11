@@ -1,3 +1,0 @@
-(3) However, in case of a computing error or wrong data, it may review the
-said reports. In this case, it shall be bound to reason its decision and state such
-reasons in its report.

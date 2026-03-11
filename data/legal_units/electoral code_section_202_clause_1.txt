@@ -1,5 +1,0 @@
-(1) above shall indicate:
-- the full address of the political party;
-- the full name and domicile of the legal representative of the
-political party;
-- the “YES” or “NO” vote on the bill submitted to the referendum.

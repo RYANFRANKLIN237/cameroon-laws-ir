@@ -1,8 +1,0 @@
-(8) The daily report shall contain:
-- the nature of the different taxes and levies,
-- the identification of beneficiaries,
-- global amount per tax and levy for each beneficiary,
-- the number of issue rolls and payment receipts established or
-printed;
-- the amount, number and date of the transfer receipt issued by
-each of the beneficiaries.

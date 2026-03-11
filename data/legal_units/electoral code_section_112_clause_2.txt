@@ -1,6 +1,0 @@
-(2) The result of counting shall not take into account:
-• Any ballot paper bearing any signs, marks or signature by which the
-elector may be identified;
-• Ballot papers contained in envelopes bearing signs of a similar nature
-or in envelopes other than those officially made available to electors;
-• Any ballot paper other than officially printed ballot papers.
