@@ -1,0 +1,2 @@
+(5) The register shall contain the full name, date and place of
+birth, occupation, residence or place of abode of every elector.

@@ -1,0 +1,1 @@
+total duration breaks shall not exceed one hour per working day

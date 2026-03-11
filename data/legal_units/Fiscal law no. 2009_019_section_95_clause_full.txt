@@ -1,0 +1,6 @@
+SECTION 95: The quarterly maximum rate of the parking tax shall be fixed as
+follows:
+:
+- motor-taxis: 3 000 francs
+- taxis: 10 000 francs
+- buses: 15 000 francs.

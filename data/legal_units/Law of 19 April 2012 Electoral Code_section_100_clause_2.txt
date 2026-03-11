@@ -1,0 +1,3 @@
+(2) In every polling station, the number of ballot papers of each
+candidate or list of candidates as well as envelopes must be more than the
+number of registered voters.

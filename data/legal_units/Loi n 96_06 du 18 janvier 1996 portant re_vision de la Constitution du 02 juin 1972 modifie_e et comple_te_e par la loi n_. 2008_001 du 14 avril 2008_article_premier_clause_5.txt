@@ -1,0 +1,3 @@
+(5) Son drapeau est : Vert, Rouge, Jaune, à trois bandes verticales
+d’égales dimensions.
+Il est frappé d’une étoile d’or au centre de la bande rouge.

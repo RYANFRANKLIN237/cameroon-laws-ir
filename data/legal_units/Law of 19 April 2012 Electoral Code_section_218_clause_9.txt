@@ -1,0 +1,4 @@
+(9) Where several lists have the same average for the award of the last
+seat, the seat shall be awarded to the list having obtained the highest number of
+votes. Where there is a tie in the number of votes obtained, the seat shall be
+awarded to the eldest candidate.

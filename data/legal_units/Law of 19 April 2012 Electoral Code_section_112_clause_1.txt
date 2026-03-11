@@ -1,0 +1,13 @@
+(1) The vote counting procedure shall be as follows:
+a) The ballot box shall be opened and the number of envelopes contained
+therein checked;
+b) One of the scrutineers shall take the ballot paper out of each envelope,
+unfold it and hand it to another scrutineer who shall read it aloud; the
+name of the candidate or list of candidates, or the choice “YES” or “NO”
+in case of referendum, appearing on the ballot paper shall be recorded
+by two scrutineers on specially prepared counting sheets. Where an
+envelope contains several ballot papers, such ballot papers shall be
+
+35
+invalid if they are different; they shall count as one vote if they
+are identical.

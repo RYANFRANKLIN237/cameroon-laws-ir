@@ -1,0 +1,1 @@
+(3) Sentences ordered to run concurrently shall be counted as a single sentence.

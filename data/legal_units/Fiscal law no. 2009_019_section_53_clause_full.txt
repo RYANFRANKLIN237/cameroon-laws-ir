@@ -1,0 +1,5 @@
+SECTION 53: Additional council taxes shall be established on the following
+taxes and duties for the benefit of councils:
+- personal income tax;
+- company tax;
+- value added tax (VAT).

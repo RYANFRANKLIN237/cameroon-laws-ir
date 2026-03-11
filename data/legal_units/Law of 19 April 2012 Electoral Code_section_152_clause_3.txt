@@ -1,0 +1,18 @@
+(3) After the ballot:
+(a) In single member constituencies, the candidate with a majority of the
+votes cast shall be declared elected ; should there be a tie, the eldest
+candidate shall be declared elected ;
+(b) In constituencies where the list system is applicable :
+- the list that obtains an absolute majority of the votes cast shall win all
+the seats available;
+- if no list obtains an absolute majority of the votes cast, the seats shall be
+shared as follows:
+* the list with the highest number of votes shall be allocated half of the
+seats rounded off, if need be, to the nearest whole number above ;
+where there is a tie between 2 (two) or more lists, the number of seats
+rounded off to the nearest whole number above shall be allocated to the
+list with the highest average age;
+* the remaining seats shall be allocated to the other lists through the
+application of proportional representation to the lists with the highest
+votes ; where there is a tie in the number of votes, the seat(s) shall be
+allocated to the list with the highest average age.

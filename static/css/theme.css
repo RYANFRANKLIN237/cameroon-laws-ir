@@ -1,0 +1,18 @@
+
+:root {
+  /* Cameroon National Colors */
+  --primary: #007A5E;   /* Green */
+  --secondary: #FCD116; /* Yellow */
+  --accent: #CE1126;    /* Red */
+  
+  /* Semantic Colors */
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --border: #e5e7eb;
+  
+  /* UI Constants */
+  --radius: 0.75rem; /* 12px */
+  --shadow: 0 10px 15px -3px rgba(0, 122, 94, 0.1);
+}

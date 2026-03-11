@@ -1,0 +1,4 @@
+SECTION 109: Vote counting and tallying shall take place in each polling
+station immediately after the actual end of voting, in the presence of voters
+who so desire provided the hall can contain them without obstructing the
+counting operation.

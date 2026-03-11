@@ -1,0 +1,3 @@
+(2) Where an elector is registered several times on the same
+register, only one registration shall be valid. Such elector shall be
+automatically struck off the other registers.
