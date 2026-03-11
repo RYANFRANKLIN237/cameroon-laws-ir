@@ -1,1 +1,0 @@
-contract must include following information identity tenant occupant single identifier location market town neighbourhood named locality cadastral reference market shop number surface area premises amount monthly fee duration lease type business 39
