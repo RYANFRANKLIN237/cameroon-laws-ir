@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import nltk
 from tqdm import tqdm
 
@@ -12,8 +13,14 @@ from tqdm import tqdm
 # " first if NLTK data is not installed
 
 
+
 UNIT_DIR = os.path.join("data", "legal_units")
+UNIT_DIR_AS = os.path.join("data", "legal_units_as")
+TEXT_DIR = os.path.join("data", "extracted_text")
+
 PROCESSED_DIR = os.path.join("data", "processed_units")
+PROCESSED_DIR_AS = os.path.join("data", "processed_units_as")
+PROCESSED_DIR_FULL = os.path.join("data", "processed_unit_full")
 
 
 
@@ -31,18 +38,20 @@ def preprocess_text(text):
     
     return tokens
 
-def preprocess_legal_units():
-    os.makedirs(PROCESSED_DIR, exist_ok=True)
+def preprocess_corpus(input_dir, output_dir):
 
-    unit_files = [f for f in os.listdir(UNIT_DIR) if f.endswith(".txt")]
+    os.makedirs(output_dir, exist_ok=True)
+
+    unit_files = [f for f in os.listdir(input_dir) if f.endswith(".txt")]
 
     if not unit_files:
-        print("No legal unit files found.")
+        print("No files found in", input_dir)
         return
 
-    for unit_file in tqdm(unit_files, desc="Preprocessing legal units"):
-        input_path = os.path.join(UNIT_DIR, unit_file)
-        output_path = os.path.join(PROCESSED_DIR, unit_file)
+    for unit_file in tqdm(unit_files, desc=f"Preprocessing {input_dir}"):
+
+        input_path = os.path.join(input_dir, unit_file)
+        output_path = os.path.join(output_dir, unit_file)
 
         with open(input_path, "r", encoding="utf-8") as f:
             text = f.read()
@@ -52,8 +61,43 @@ def preprocess_legal_units():
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(" ".join(tokens))
 
-    print("\nPreprocessing of legal units completed.")
+    print(f"\nPreprocessing completed for {input_dir}")
+
+
+def run_preprocessing(granularity):
+
+    if granularity == "clause":
+
+        preprocess_corpus(
+            UNIT_DIR,
+            PROCESSED_DIR
+        )
+
+    elif granularity == "as":
+
+        preprocess_corpus(
+            UNIT_DIR_AS,
+            PROCESSED_DIR_AS
+        )
+
+    elif granularity == "document":
+
+        preprocess_corpus(
+            TEXT_DIR,
+            PROCESSED_DIR_FULL
+        )
+
+    else:
+
+        print("Granularity must be: clause | as | document")
 
 
 if __name__ == "__main__":
-    preprocess_legal_units()
+
+    if len(sys.argv) < 2:
+        print("Usage: python -m src.preprocessing [clause | as | document]")
+        sys.exit(1)
+        
+    granularity = sys.argv[1].lower()
+    
+    run_preprocessing(granularity)

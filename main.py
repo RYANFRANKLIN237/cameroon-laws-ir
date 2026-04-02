@@ -64,7 +64,7 @@ def transform_result(raw: dict, rank: int) -> dict:
         "tfidf_score":   round(raw.get("score", 0), 4),
         "rerank_score":  round(raw.get("final_score", 0), 4),
         "law_type":      raw.get("law_type", ""),
-        "unit_type":     raw.get("unit_type", ""),
+        "unit_type":     raw.get("unit_type", "")
     }
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -118,17 +118,31 @@ def api_search():
 def api_metrics():
     """
     Assembles data from all evaluation modules into one JSON response.
-    To swap in real data later, edit only the individual module files:
-      evaluation.py  -> baseline + ranked metrics
-      diagnostics.py -> system data (corpus size, index, ground truth, failures)
+ 
+    Returns:
+      baseline / ranked  — clause-level TF-IDF vs reranked (performance comparison table)
+      granularity        — clause / as / document scores (granularity comparison table)
+      systemData         — corpus size, index size, ground truth count, failed queries per level
     """
-    metrics_data = get_metrics()
-    system_data  = get_system_data()
+    clause_metrics      = get_metrics(mode="clause")   # {baseline, ranked}
+    granularity_metrics = get_metrics(mode="all")      # {clause, as, document}
+    system_data         = get_system_data()
+ 
     return jsonify({
-        "baseline":   metrics_data["baseline"],
-        "ranked":     metrics_data["ranked"],
-        "systemData": system_data,
-    })   
+        # Existing performance comparison table (unchanged)
+        "baseline":    clause_metrics["baseline"],
+        "ranked":      clause_metrics["ranked"],
+ 
+        # New granularity comparison table
+        "granularity": {
+            "document": granularity_metrics["document"],
+            "as":       granularity_metrics["as"],
+            "clause":   granularity_metrics["clause"],
+        },
+ 
+        # System data — includes per-level failed query counts
+        "systemData":  system_data,
+    })
 
 @app.route('/view-pdf/<path:source_name>')
 def serve_legal_pdf(source_name):

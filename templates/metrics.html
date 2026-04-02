@@ -194,7 +194,7 @@
                                     <strong>What it means:</strong> Of the top 3 results shown, what percentage are relevant?
                                 </p>
                                 <p class="text-sm text-gray-500">
-                                    <strong>The system:</strong>
+                                    <strong>Your system:</strong>
                                     On average, <span x-text="(baseline.precisionAt3 * 3).toFixed(1)"></span> out of 3 documents in the top 3 are correct.
                                     Reranking improved this to <span x-text="(ranked.precisionAt3 * 3).toFixed(1)"></span> relevant results.
                                 </p>
@@ -209,7 +209,7 @@
                                     <strong>What it means:</strong> Of the top 5 results shown, what percentage are relevant?
                                 </p>
                                 <p class="text-sm text-gray-500">
-                                    <strong>The system:</strong>
+                                    <strong>Your system:</strong>
                                     On average, <span x-text="(baseline.precisionAt5 * 5).toFixed(1)"></span> out of 5 documents are relevant.
                                     Shows the system needs better ranking in top positions.
                                 </p>
@@ -224,7 +224,7 @@
                                     <strong>What it means:</strong> Of all relevant documents, what percentage appear in the top 10 results?
                                 </p>
                                 <p class="text-sm text-gray-500">
-                                    <strong>The system:</strong>
+                                    <strong>Your system:</strong>
                                     <span x-text="(baseline.recallAt10 * 100).toFixed(1)"></span>% of correct answers are somewhere in your top 10.
                                     This is <strong class="text-green-600">GOOD</strong> — it means retrieval is working, the right documents are being found.
                                 </p>
@@ -239,7 +239,7 @@
                                     <strong>What it means:</strong> Average position of the first relevant document.
                                 </p>
                                 <p class="text-sm text-gray-500">
-                                    <strong>The system:</strong>
+                                    <strong>Your system:</strong>
                                     The first relevant document appears at position ~<span x-text="(1 / ranked.mrr).toFixed(1)"></span> on average.
                                     This is <strong class="text-green-600">GOOD</strong> — most legal IR systems aim for MRR 0.55–0.70.
                                 </p>
@@ -253,7 +253,7 @@
                             <ul class="space-y-2 text-sm">
                                 <li class="flex items-start gap-2">
                                     <span class="text-green-600 font-bold mt-0.5">✓</span>
-                                    <span>The system finds the right documents (<span x-text="`${(baseline.recallAt10*100).toFixed(1)}% recall`"></span>)</span>
+                                    <span>Your system finds the right documents (<span x-text="`${(baseline.recallAt10*100).toFixed(1)}% recall`"></span>)</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-amber-500 font-bold mt-0.5">⚠</span>
@@ -268,6 +268,174 @@
                                     <span>On average, the answer is in position <span x-text="(1 / ranked.mrr).toFixed(1)"></span> after reranking</span>
                                 </li>
                             </ul>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- ── DOCUMENT GRANULARITY COMPARISON ───────────── -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8"
+                     style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.3s both; opacity:0;">
+
+                    <h3 class="text-xl font-bold text-gray-900 mb-1">Document Granularity Comparison</h3>
+                    <p class="text-sm text-gray-400 mb-6">Comparing search performance across different levels of document segmentation</p>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">Metric</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-[#CE1126]">Full Document</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-[#F9A825]">Section/Article Level</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-[#007A5E]">Clause Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Precision@3 -->
+                                <template x-for="(gRow, gIndex) in granularityRows" :key="gRow.key">
+                                    <tr class="row-enter border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                        :style="`animation-delay: ${0.4 + gIndex * 0.1}s`">
+
+                                        <td class="py-4 px-4">
+                                            <p class="font-medium text-gray-900" x-text="gRow.label"></p>
+                                            <p class="text-sm text-gray-400" x-text="gRow.description"></p>
+                                        </td>
+
+                                        <!-- Full Document (red) -->
+                                        <td class="text-center py-4 px-4">
+                                            <div class="inline-block scale-enter"
+                                                 :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
+                                                <span class="text-2xl font-bold text-[#CE1126]"
+                                                      x-text="gRow.isCount
+                                                          ? granularity.document[gRow.key]
+                                                          : `${(granularity.document[gRow.key] * 100).toFixed(1)}%`">
+                                                </span>
+                                                <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#CE1126] rounded-full bar-fill"
+                                                         :data-width="gRow.isCount
+                                                             ? `${(granularity.document[gRow.key] / 20) * 100}%`
+                                                             : `${granularity.document[gRow.key] * 100}%`">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Section/Article Level (orange) -->
+                                        <td class="text-center py-4 px-4">
+                                            <div class="inline-block scale-enter"
+                                                 :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
+                                                <span class="text-2xl font-bold text-[#F9A825]"
+                                                      x-text="gRow.isCount
+                                                          ? granularity.as[gRow.key]
+                                                          : `${(granularity.as[gRow.key] * 100).toFixed(1)}%`">
+                                                </span>
+                                                <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#F9A825] rounded-full bar-fill"
+                                                         :data-width="gRow.isCount
+                                                             ? `${(granularity.as[gRow.key] / 20) * 100}%`
+                                                             : `${granularity.as[gRow.key] * 100}%`">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Clause Level (green) -->
+                                        <td class="text-center py-4 px-4">
+                                            <div class="inline-block scale-enter"
+                                                 :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
+                                                <span class="text-2xl font-bold text-[#007A5E]"
+                                                      x-text="gRow.isCount
+                                                          ? granularity.clause[gRow.key]
+                                                          : `${(granularity.clause[gRow.key] * 100).toFixed(1)}%`">
+                                                </span>
+                                                <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#007A5E] rounded-full bar-fill"
+                                                         :data-width="gRow.isCount
+                                                             ? `${(granularity.clause[gRow.key] / 20) * 100}%`
+                                                             : `${granularity.clause[gRow.key] * 100}%`">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- ── KEY INSIGHTS ──────────────────────────── -->
+                    <div class="mt-8 pt-6 border-t border-gray-100"
+                         style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 1.0s both; opacity:0;">
+
+                        <h4 class="font-bold text-gray-900 text-lg mb-4">Key Insights on Document Granularity</h4>
+
+                        <!-- Green "why clause is best" box -->
+                        <div class="p-5 bg-[#007A5E]/5 rounded-xl border border-[#007A5E]/20 mb-6">
+                            <h5 class="font-bold text-[#007A5E] mb-4">Why Clause-Level Search Performs Better</h5>
+                            <ul class="space-y-2 text-sm">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-[#007A5E] font-bold mt-0.5">→</span>
+                                    <span>
+                                        <strong>Higher Precision:</strong>
+                                        Clause-level segmentation achieves
+                                        <span x-text="`${(granularity.clause.precisionAt3 * 100).toFixed(1)}% P@3`"></span>,
+                                        compared to
+                                        <span x-text="`${(granularity.document.precisionAt3 * 100).toFixed(1)}%`"></span>
+                                        for full documents
+                                    </span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-[#007A5E] font-bold mt-0.5">→</span>
+                                    <span><strong>Reduced Noise:</strong> Smaller units mean less irrelevant content diluting the match score</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-[#007A5E] font-bold mt-0.5">→</span>
+                                    <span>
+                                        <strong>Better Ranking:</strong>
+                                        MRR of <span x-text="granularity.clause.mrr.toFixed(3)"></span>
+                                        shows relevant clauses appear at position
+                                        ~<span x-text="(1 / granularity.clause.mrr).toFixed(1)"></span> on average
+                                    </span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-[#007A5E] font-bold mt-0.5">→</span>
+                                    <span><strong>Legal Specificity:</strong> Legal queries often target specific clauses, not entire documents</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Three level cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                            <!-- Full Document — red -->
+                            <div class="p-5 bg-[#CE1126]/5 rounded-xl border border-[#CE1126]/20">
+                                <h5 class="font-bold text-[#CE1126] mb-2">Full Document</h5>
+                                <p class="text-sm text-gray-600">
+                                    Searching entire legal documents leads to lower precision due to content dilution.
+                                    Long documents contain many topics, making exact matches harder.
+                                </p>
+                            </div>
+
+                            <!-- Section/Article Level — orange -->
+                            <div class="p-5 bg-[#F9A825]/5 rounded-xl border border-[#F9A825]/20">
+                                <h5 class="font-bold text-[#F9A825] mb-2">Section/Article Level</h5>
+                                <p class="text-sm text-gray-600">
+                                    Better than full documents but still contains multiple concepts.
+                                    Improvement of
+                                    <span x-text="`${(((granularity.as.precisionAt3 - granularity.document.precisionAt3) / granularity.document.precisionAt3) * 100).toFixed(1)}%`"></span>
+                                    in P@3.
+                                </p>
+                            </div>
+
+                            <!-- Clause Level — green -->
+                            <div class="p-5 bg-[#007A5E]/5 rounded-xl border border-[#007A5E]/20">
+                                <h5 class="font-bold text-[#007A5E] mb-2">Clause Level (Best)</h5>
+                                <p class="text-sm text-gray-600">
+                                    Optimal granularity for legal search. Each unit is focused and specific, leading to
+                                    <span x-text="`${(((granularity.clause.precisionAt3 - granularity.document.precisionAt3) / granularity.document.precisionAt3) * 100).toFixed(1)}%`"></span>
+                                    improvement over full documents.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -343,9 +511,10 @@
                 isLoading: true,
 
                 // Populated from /api/metrics
-                baseline:   {},
-                ranked:     {},
-                systemData: {},
+                baseline:    {},
+                ranked:      {},
+                granularity: {},   // {document, as, clause}
+                systemData:  {},
 
                 // Table row definitions — purely presentational, no data here
                 metricRows: [
@@ -355,6 +524,17 @@
                     { key: "mrr",          label: "Mean Reciprocal Rank", description: "Average reciprocal rank" },
                 ],
 
+                // Granularity comparison rows
+                // isCount: true  → render as raw integer (no % conversion, bar scaled against 20 max)
+                // isCount: false → render as percentage
+                granularityRows: [
+                    { key: "precisionAt3", label: "Precision@3",          description: "Precision at rank 3",              isCount: false },
+                    { key: "precisionAt5", label: "Precision@5",          description: "Precision at rank 5",              isCount: false },
+                    { key: "recallAt10",   label: "Recall@10",            description: "Recall at rank 10",                isCount: false },
+                    { key: "mrr",          label: "Mean Reciprocal Rank", description: "Average reciprocal rank",          isCount: false },
+                    { key: "failedQueries",label: "Failed Queries",       description: "Queries with no relevant results", isCount: true  },
+                ],
+
                 async init() {
                     lucide.createIcons();
 
@@ -362,9 +542,15 @@
                         const res  = await fetch('/api/metrics');
                         const data = await res.json();
 
-                        this.baseline   = data.baseline;
-                        this.ranked     = data.ranked;
-                        this.systemData = data.systemData;
+                        this.baseline    = data.baseline;
+                        this.ranked      = data.ranked;
+                        // Attach per-level failed query counts from systemData into granularity
+                        // so granularityRows can read them with the same gRow.key pattern
+                        data.granularity.clause.failedQueries   = data.systemData.failedQueries;
+                        data.granularity.as.failedQueries       = data.systemData.failedQueries_as;
+                        data.granularity.document.failedQueries = data.systemData.failedQueries_document;
+                        this.granularity = data.granularity;
+                        this.systemData  = data.systemData;
 
                     } catch (err) {
                         console.error('Failed to load metrics:', err);
