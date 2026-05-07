@@ -23,7 +23,14 @@ def load_ground_truth(granularity="clause"):
         return json.load(f)
 
 
+def hit_at_k(retrieved, relevant, k):
+    """
+    Returns 1 if at least one relevant doc is in top-k, else 0
+    """
+    retrieved_k = retrieved[:k]
+    relevant_set = set(relevant)
 
+    return 1 if any(doc in relevant_set for doc in retrieved_k) else 0
 
 def precision_at_k(retrieved, relevant, k):
 
@@ -62,8 +69,8 @@ def evaluate(use_rerank=False, granularity="clause"):
 
     ground_truth = load_ground_truth(granularity)
 
+    hit3_scores = []
     p3_scores = []
-    p5_scores = []
     r10_scores = []
     mrr_scores = []
 
@@ -78,14 +85,14 @@ def evaluate(use_rerank=False, granularity="clause"):
 
         retrieved_docs = [r["unit_id"] for r in results]
 
+        hit3_scores.append(hit_at_k(retrieved_docs, relevant_docs, 3))
         p3_scores.append(precision_at_k(retrieved_docs, relevant_docs, 3))
-        p5_scores.append(precision_at_k(retrieved_docs, relevant_docs, 5))
         r10_scores.append(recall_at_k(retrieved_docs, relevant_docs, 10))
         mrr_scores.append(reciprocal_rank(retrieved_docs, relevant_docs))
 
     scores = {
+        "hitAt3": round(mean(hit3_scores), 3),
         "precisionAt3": round(mean(p3_scores), 3),
-        "precisionAt5": round(mean(p5_scores), 3),
         "recallAt10": round(mean(r10_scores), 3),
         "mrr": round(mean(mrr_scores), 3),
     }
@@ -94,10 +101,10 @@ def evaluate(use_rerank=False, granularity="clause"):
     print(f"Granularity: {granularity}")
     print(f"Rerank: {use_rerank}")
     print("==============================")
-    print(f"Mean Precision@3: {scores['precisionAt3']:.3f}")
-    print(f"Mean Precision@5: {scores['precisionAt5']:.3f}")
-    print(f"Mean Recall@10:   {scores['recallAt10']:.3f}")
-    print(f"Mean MRR:         {scores['mrr']:.3f}")
+    print(f"Hit@3:           {scores['hitAt3']:.3f}")
+    print(f"MRR:             {scores['mrr']:.3f}")
+    print(f"Precision@3:     {scores['precisionAt3']:.3f}")
+    print(f"Recall@10:       {scores['recallAt10']:.3f}")
 
     return scores
 
@@ -122,9 +129,9 @@ def get_metrics(mode="clause") -> dict:
     # COMPARISON TABLE MODE
     elif mode == "all":
 
-        clause_scores = evaluate(use_rerank=False, granularity="clause")
-        as_scores = evaluate(use_rerank=False, granularity="as")
-        document_scores = evaluate(use_rerank=False, granularity="document")
+        clause_scores = evaluate(use_rerank=True, granularity="clause")
+        as_scores = evaluate(use_rerank=True, granularity="as")
+        document_scores = evaluate(use_rerank=True, granularity="document")
 
         return {
             "clause": clause_scores,

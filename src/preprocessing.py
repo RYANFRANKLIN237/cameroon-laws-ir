@@ -12,6 +12,8 @@ from tqdm import tqdm
 # nltk.download('all', quiet=False)
 # " first if NLTK data is not installed
 
+# python3 -c "import ssl; ssl._create_default_https_context = ssl._create_unverified_context; import nltk; nltk.download('punkt')"
+
 
 
 UNIT_DIR = os.path.join("data", "legal_units")

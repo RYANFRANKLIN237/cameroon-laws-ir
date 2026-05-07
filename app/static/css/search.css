@@ -1,0 +1,32 @@
+input:focus {
+    outline: none !important;
+}
+
+.premium-ease {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fade-slide in for result cards — slow, premium feel */
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(28px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.result-card {
+    /* 
+             * 1.0s duration  — long enough to feel deliberate, not sluggish
+             * ease-out curve — starts fast, decelerates smoothly into place
+             * "both"         — holds the from-state before delay, stays at to-state after
+             * opacity starts at 0 so cards don't flash in before the animation begins
+             */
+    animation: fadeSlideUp 1.0s cubic-bezier(0.16, 1, 0.3, 1) both;
+    opacity: 0;
+    /* prevent flash before animation fires */
+}

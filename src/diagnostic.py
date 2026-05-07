@@ -1,115 +1,3 @@
-# import json
-# import os
-# from src.tfidf_search import search
-
-# GROUND_TRUTH_PATH = os.path.join("data", "ground_truth", "ground_truth.json")
-# GROUND_TRUTH_PATH_AS = os.path.join("data", "ground_truth", "ground_truth_as.json")
-# GROUND_TRUTH_PATH_DOCUMENT = os.path.join("data", "ground_truth", "ground_truth_document.json")
-
-# INVERTED_INDEX_PATH = os.path.join("index", "inverted_index.json")
-# LEGAL_UNITS_PATH = os.path.join("data", "legal_units")
-
-
-
-
-# def load_ground_truth():
-#     with open(GROUND_TRUTH_PATH, "r", encoding="utf-8") as f:
-#         return json.load(f)
-
-# def load_inverted_index():
-#     with open(INVERTED_INDEX_PATH, "r", encoding="utf-8") as f:
-#         return json.load(f)
-
-
-# def diagnose():
-#     ground_truth = load_ground_truth()
-    
-#     failures = []
-    
-#     for query, relevant_docs in ground_truth.items():
-#         results = search(query, top_k=20, use_rerank=False)
-#         retrieved = [r["unit_id"] for r in results]
-        
-#         # Find position of first relevant doc
-#         first_position = None
-#         for pos, doc_id in enumerate(retrieved, start=1):
-#             if doc_id in relevant_docs:
-#                 first_position = pos
-#                 break
-        
-#         if first_position is None:
-#             failures.append({
-#                 "query": query,
-#                 "relevant": relevant_docs,
-#                 "retrieved_top5": retrieved[:5],
-#                 "status": "NOT_FOUND"
-#             })
-#         elif first_position > 10:
-#             failures.append({
-#                 "query": query,
-#                 "relevant": relevant_docs,
-#                 "first_position": first_position,
-#                 "retrieved_top5": retrieved[:5],
-#                 "status": "RANK_TOO_LOW"
-#             })
-    
-#     print(f"\n{'='*80}")
-#     print(f"DIAGNOSTIC REPORT")
-#     print(f"{'='*80}")
-#     print(f"Total queries: {len(ground_truth)}")
-#     print(f"Failures: {len(failures)}")
-#     print(f"\n{'='*80}")
-    
-#     for i, failure in enumerate(failures[:10], 1):  # Show first 10 failures
-#         print(f"\nFAILURE #{i}:")
-#         print(f"Query: {failure['query']}")
-#         print(f"Expected: {failure['relevant'][0]}")
-#         print(f"Status: {failure['status']}")
-#         if failure['status'] == 'RANK_TOO_LOW':
-#             print(f"Found at position: {failure['first_position']}")
-#         print(f"Top 5 retrieved:")
-#         for j, doc in enumerate(failure['retrieved_top5'], 1):
-#             print(f"  {j}. {doc}")
-
-# def get_system_data() -> dict:
-
-#     legal_corpus_size = len([
-#         f for f in os.listdir(LEGAL_UNITS_PATH)
-#         if f.endswith(".txt")
-#     ])
-
-   
-#     inverted_index = load_inverted_index()
-#     inverted_index_size = len(inverted_index)
-
-   
-#     ground_truth = load_ground_truth()
-#     ground_truth_queries = len(ground_truth)
-
-#     failed_count = 0
-#     for query, relevant_docs in ground_truth.items():
-#         results  = search(query, top_k=20, use_rerank=False)
-#         retrieved = [r["unit_id"] for r in results]
-
-#         first_position = None
-#         for pos, doc_id in enumerate(retrieved, start=1):
-#             if doc_id in relevant_docs:
-#                 first_position = pos
-#                 break
-
-#         if first_position is None or first_position > 10:
-#             failed_count += 1
-
-#     return {
-#         "legalCorpusSize":    legal_corpus_size,
-#         "invertedIndexSize":  inverted_index_size,
-#         "groundTruthQueries": ground_truth_queries,
-#         "failedQueries":      failed_count,
-#     }               
-
-# if __name__ == "__main__":
-#     diagnose()
-
 import json
 import os
 from src.tfidf_search import search
@@ -166,27 +54,42 @@ def load_inverted_index(granularity="clause"):
 # DIAGNOSTIC
 ############################################
 
-def diagnose(granularity="clause"):
+
+def diagnose(granularity="clause", use_rerank=False):
 
     ground_truth = load_ground_truth(granularity)
 
     failures = []
+
+    precision_failures = 0   # ❌ no relevant doc in top 3
+    top5_misses = 0          # ❌ no relevant doc in top 5
 
     for query, relevant_docs in ground_truth.items():
 
         results = search(
             query,
             top_k=20,
-            use_rerank=False,
+            use_rerank=use_rerank,
             granularity=granularity
         )
 
         retrieved = [r["unit_id"] for r in results]
 
+        # -----------------------------
+        # 🔥 Precision diagnostics
+        # -----------------------------
+        if not any(doc in relevant_docs for doc in retrieved[:3]):
+            precision_failures += 1
+
+        if not any(doc in relevant_docs for doc in retrieved[:5]):
+            top5_misses += 1
+
+        # -----------------------------
+        # Existing failure logic
+        # -----------------------------
         first_position = None
 
         for pos, doc_id in enumerate(retrieved, start=1):
-
             if doc_id in relevant_docs:
                 first_position = pos
                 break
@@ -210,13 +113,21 @@ def diagnose(granularity="clause"):
                 "status": "RANK_TOO_LOW"
             })
 
+    # -----------------------------
+    # REPORT
+    # -----------------------------
     print(f"\n{'='*80}")
     print(f"DIAGNOSTIC REPORT ({granularity})")
     print(f"{'='*80}")
     print(f"Total queries: {len(ground_truth)}")
-    print(f"Failures: {len(failures)}")
+    print(f"Failures (out of top 10): {len(failures)}")
+    print(f"Precision Failures (no hit in top 3): {precision_failures}")
+    print(f"Top-5 Misses (no hit in top 5): {top5_misses}")
     print(f"{'='*80}")
 
+    # -----------------------------
+    # SAMPLE FAILURES
+    # -----------------------------
     for i, failure in enumerate(failures[:10], 1):
 
         print(f"\nFAILURE #{i}")
@@ -234,12 +145,11 @@ def diagnose(granularity="clause"):
 
     return failures
 
-
 ############################################
 # FAILURE COUNT (used by API)
 ############################################
 
-def count_failures(granularity="clause"):
+def count_failures(granularity="clause", use_rerank=False):
 
     ground_truth = load_ground_truth(granularity)
 
@@ -250,7 +160,7 @@ def count_failures(granularity="clause"):
         results = search(
             query,
             top_k=20,
-            use_rerank=False,
+            use_rerank=use_rerank,
             granularity=granularity
         )
 
@@ -288,7 +198,7 @@ def get_system_data() -> dict:
     ground_truth = load_ground_truth()
     ground_truth_queries = len(ground_truth)
 
-    failed_clause = count_failures("clause")
+    failed_clause = count_failures("clause",True)
     failed_as = count_failures("as")
     failed_document = count_failures("document")
 
@@ -310,7 +220,7 @@ def get_system_data() -> dict:
 if __name__ == "__main__":
 
     print("Clause diagnostics")
-    diagnose("clause")
+    diagnose("clause",True)
 
     print("\nAS diagnostics")
     diagnose("as")

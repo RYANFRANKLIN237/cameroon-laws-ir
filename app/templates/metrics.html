@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Effectiveness Metrics - Cameroon Legal Search</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/metrics.css') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -20,58 +22,9 @@
     </script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-
-    <style>
-        /* Page slides in from the right — matches Figma's x: "100%" → 0 */
-        @keyframes slideInFromRight {
-            from { opacity: 0; transform: translateX(60px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
-        .page-enter {
-            animation: slideInFromRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        /* Each table row slides in from left — matches Figma's x: -20 → 0 */
-        @keyframes slideInFromLeft {
-            from { opacity: 0; transform: translateX(-20px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
-        .row-enter {
-            animation: slideInFromLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-            opacity: 0;
-        }
-
-        /* Progress bar fill animation */
-        .bar-fill {
-            width: 0%;
-            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        /* Stat number scale-in — matches Figma's scale: 0 → 1 spring */
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.6); }
-            to   { opacity: 1; transform: scale(1); }
-        }
-        .scale-enter {
-            animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-            opacity: 0;
-        }
-
-        /* System cards slide up */
-        @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .card-enter {
-            animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-            opacity: 0;
-        }
-    </style>
 </head>
 
-<body class="bg-[#F8F9FA] min-h-screen flex flex-col font-sans"
-      x-data="metricsApp()"
-      x-init="init()">
+<body class="bg-[#F8F9FA] min-h-screen flex flex-col font-sans" x-data="metricsApp()" x-init="init()">
 
     <!-- ── PAGE WRAPPER (slides in) ──────────────────────────────── -->
     <div class="page-enter flex flex-col min-h-screen">
@@ -81,12 +34,12 @@
             <div class="max-w-7xl mx-auto px-6 py-4 flex items-center gap-4">
                 <!-- Back button -->
                 <a href="/search"
-                   class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
+                    class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
                     <i data-lucide="arrow-left" class="w-5 h-5 text-gray-600"></i>
                 </a>
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Effectiveness Metrics</h2>
-                    <p class="text-sm text-gray-400 mt-0.5">Comparing TF-IDF Baseline vs Ranked Results</p>
+                    <p class="text-sm text-gray-400 mt-0.5">Comparing TF-IDF Baseline vs ReRanked Results</p>
                 </div>
             </div>
         </header>
@@ -97,8 +50,8 @@
             <!-- Loading state -->
             <div x-show="isLoading" class="flex items-center justify-center py-32">
                 <svg class="animate-spin w-8 h-8 text-[#007A5E]" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                 </svg>
             </div>
 
@@ -107,7 +60,7 @@
 
                 <!-- ── PERFORMANCE COMPARISON CARD ──────────────── -->
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8"
-                     style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.1s both;">
+                    style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.1s both;">
 
                     <h3 class="text-xl font-bold text-gray-900 mb-6">Performance Comparison</h3>
 
@@ -117,10 +70,11 @@
                             <thead>
                                 <tr class="border-b-2 border-gray-200">
                                     <th class="text-left py-3 px-4 font-semibold text-gray-700">Metric</th>
-                                    <th class="text-center py-3 px-4 font-semibold text-[#007A5E]">TF-IDF Baseline</th>
-                                    <th class="text-center py-3 px-4 font-semibold text-[#CE1126]">Ranked (Re-ranked)</th>
-                                    <th class="text-center py-3 px-4 font-semibold text-[#F9A825]">Improvement</th>
-                                </tr>
+                                    <th class="text-center py-3 px-4 font-semibold text-[#CE1126]">TF-IDF Baseline</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-[#007A5E]">Ranked (Re-ranked)
+                                    </th>
+                                    <th class="text-center py-3 px-4 font-semibold text-[#FCD116]">Improvement</th>
+                                    </td>
                             </thead>
                             <tbody>
                                 <template x-for="(metric, index) in metricRows" :key="metric.key">
@@ -133,31 +87,37 @@
                                             <p class="text-sm text-gray-400" x-text="metric.description"></p>
                                         </td>
 
-                                        <!-- Baseline value + bar -->
+                                        <!-- Baseline value + bar (now red) -->
                                         <td class="text-center py-4 px-4">
                                             <div class="inline-block scale-enter"
-                                                 :style="`animation-delay: ${0.3 + index * 0.1}s`">
-                                                <span class="text-2xl font-bold text-[#007A5E]"
-                                                      x-text="`${(baseline[metric.key] * 100).toFixed(1)}%`">
+                                                :style="`animation-delay: ${0.3 + index * 0.1}s`">
+                                                <span class="text-2xl font-bold text-[#CE1126]" x-text="metric.isCount
+                                                          ? baseline[metric.key]
+                                                          : `${(baseline[metric.key] * 100).toFixed(1)}%`">
                                                 </span>
-                                                <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
-                                                    <div class="h-full bg-[#007A5E] rounded-full bar-fill"
-                                                         :data-width="`${baseline[metric.key] * 100}%`">
+                                                <div
+                                                    class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#CE1126] rounded-full bar-fill" :data-width="metric.isCount
+                                                             ? `${(baseline[metric.key] / 20) * 100}%`
+                                                             : `${baseline[metric.key] * 100}%`">
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
 
-                                        <!-- Ranked value + bar -->
+                                        <!-- Ranked value + bar (now green) -->
                                         <td class="text-center py-4 px-4">
                                             <div class="inline-block scale-enter"
-                                                 :style="`animation-delay: ${0.3 + index * 0.1}s`">
-                                                <span class="text-2xl font-bold text-[#CE1126]"
-                                                      x-text="`${(ranked[metric.key] * 100).toFixed(1)}%`">
+                                                :style="`animation-delay: ${0.3 + index * 0.1}s`">
+                                                <span class="text-2xl font-bold text-[#007A5E]" x-text="metric.isCount
+                                                          ? ranked[metric.key]
+                                                          : `${(ranked[metric.key] * 100).toFixed(1)}%`">
                                                 </span>
-                                                <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
-                                                    <div class="h-full bg-[#CE1126] rounded-full bar-fill"
-                                                         :data-width="`${ranked[metric.key] * 100}%`">
+                                                <div
+                                                    class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#007A5E] rounded-full bar-fill" :data-width="metric.isCount
+                                                             ? `${(ranked[metric.key] / 20) * 100}%`
+                                                             : `${ranked[metric.key] * 100}%`">
                                                     </div>
                                                 </div>
                                             </div>
@@ -166,9 +126,9 @@
                                         <!-- Improvement % -->
                                         <td class="text-center py-4 px-4">
                                             <span class="text-xl font-semibold scale-enter"
-                                                  :style="`animation-delay: ${0.5 + index * 0.1}s`"
-                                                  :class="improvement(metric.key) > 0 ? 'text-green-600' : improvement(metric.key) < 0 ? 'text-red-600' : 'text-gray-400'"
-                                                  x-text="improvementLabel(metric.key)">
+                                                :style="`animation-delay: ${0.5 + index * 0.1}s`"
+                                                :class="improvement(metric.key) > 0 ? 'text-[#007A5E]' : improvement(metric.key) < 0 ? 'text-red-600' : 'text-gray-400'"
+                                                x-text="improvementLabel(metric.key)">
                                             </span>
                                         </td>
                                     </tr>
@@ -179,106 +139,125 @@
 
                     <!-- ── UNDERSTANDING THESE METRICS ──────────── -->
                     <div class="mt-8 pt-6 border-t border-gray-100"
-                         style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.8s both; opacity:0;">
+                        style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.8s both; opacity:0;">
 
                         <h4 class="font-bold text-gray-900 text-lg mb-6">Understanding These Metrics</h4>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                            <!-- Precision@3 -->
+                            <!-- Hit@3 -->
                             <div class="space-y-2">
                                 <h5 class="font-semibold text-[#007A5E]">
-                                    Precision@3 (<span x-text="`${(baseline.precisionAt3*100).toFixed(1)}% → ${(ranked.precisionAt3*100).toFixed(1)}%`"></span>)
+                                    Hit@3 (<span
+                                        x-text="`${(baseline.hitAt3*100).toFixed(1)}% → ${(ranked.hitAt3*100).toFixed(1)}%`"></span>)
                                 </h5>
                                 <p class="text-sm text-gray-500">
-                                    <strong>What it means:</strong> Of the top 3 results shown, what percentage are relevant?
+                                    <strong>What it means:</strong> Whether at least one relevant document appears
+                                    within the top 3 results.
                                 </p>
                                 <p class="text-sm text-gray-500">
-                                    <strong>Your system:</strong>
-                                    On average, <span x-text="(baseline.precisionAt3 * 3).toFixed(1)"></span> out of 3 documents in the top 3 are correct.
-                                    Reranking improved this to <span x-text="(ranked.precisionAt3 * 3).toFixed(1)"></span> relevant results.
-                                </p>
-                            </div>
-
-                            <!-- Precision@5 -->
-                            <div class="space-y-2">
-                                <h5 class="font-semibold text-[#007A5E]">
-                                    Precision@5 (<span x-text="`${(baseline.precisionAt5*100).toFixed(1)}% → ${(ranked.precisionAt5*100).toFixed(1)}%`"></span>)
-                                </h5>
-                                <p class="text-sm text-gray-500">
-                                    <strong>What it means:</strong> Of the top 5 results shown, what percentage are relevant?
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    <strong>Your system:</strong>
-                                    On average, <span x-text="(baseline.precisionAt5 * 5).toFixed(1)"></span> out of 5 documents are relevant.
-                                    Shows the system needs better ranking in top positions.
-                                </p>
-                            </div>
-
-                            <!-- Recall@10 -->
-                            <div class="space-y-2">
-                                <h5 class="font-semibold text-[#CE1126]">
-                                    Recall@10 (<span x-text="`${(baseline.recallAt10*100).toFixed(1)}%`"></span>)
-                                </h5>
-                                <p class="text-sm text-gray-500">
-                                    <strong>What it means:</strong> Of all relevant documents, what percentage appear in the top 10 results?
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    <strong>Your system:</strong>
-                                    <span x-text="(baseline.recallAt10 * 100).toFixed(1)"></span>% of correct answers are somewhere in your top 10.
-                                    This is <strong class="text-green-600">GOOD</strong> — it means retrieval is working, the right documents are being found.
+                                    <strong>The system:</strong>
+                                    <span x-text="`${(baseline.hitAt3*100).toFixed(1)}%`"></span> of queries have at
+                                    least one correct answer in the top 3 results.
+                                    Reranking improved this to <span
+                                        x-text="`${(ranked.hitAt3*100).toFixed(1)}%`"></span>.
                                 </p>
                             </div>
 
                             <!-- MRR -->
                             <div class="space-y-2">
-                                <h5 class="font-semibold text-[#F9A825]">
-                                    Mean Reciprocal Rank (<span x-text="`${(baseline.mrr*100).toFixed(1)}% → ${(ranked.mrr*100).toFixed(1)}%`"></span>)
+                                <h5 class="font-semibold text-[#FCD116]">
+                                    Mean Reciprocal Rank (<span
+                                        x-text="`${(baseline.mrr*100).toFixed(1)}% → ${(ranked.mrr*100).toFixed(1)}%`"></span>)
                                 </h5>
                                 <p class="text-sm text-gray-500">
                                     <strong>What it means:</strong> Average position of the first relevant document.
                                 </p>
                                 <p class="text-sm text-gray-500">
-                                    <strong>Your system:</strong>
-                                    The first relevant document appears at position ~<span x-text="(1 / ranked.mrr).toFixed(1)"></span> on average.
-                                    This is <strong class="text-green-600">GOOD</strong> — most legal IR systems aim for MRR 0.55–0.70.
+                                    <strong>The system:</strong>
+                                    The first relevant document appears at position ~<span
+                                        x-text="(1 / ranked.mrr).toFixed(1)"></span> on average.
+                                    This is <strong class="text-green-600">GOOD</strong> — most legal IR systems aim for
+                                    MRR 0.55–0.70.
+                                </p>
+                            </div>
+
+                            <!-- Precision@3 -->
+                            <div class="space-y-2">
+                                <h5 class="font-semibold text-[#CE1126]">
+                                    Precision@3 (<span
+                                        x-text="`${(baseline.precisionAt3*100).toFixed(1)}% → ${(ranked.precisionAt3*100).toFixed(1)}%`"></span>)
+                                </h5>
+                                <p class="text-sm text-gray-500">
+                                    <strong>What it means:</strong> Of the top 3 results shown, what percentage are
+                                    relevant?
+                                </p>
+                                <p class="text-sm text-gray-500">
+                                    <strong>The system:</strong>
+                                    On average, <span x-text="(baseline.precisionAt3 * 3).toFixed(1)"></span> out of 3
+                                    documents in the top 3 are correct.
+                                    Reranking improved this to <span
+                                        x-text="(ranked.precisionAt3 * 3).toFixed(1)"></span> relevant results.
+                                </p>
+                            </div>
+
+                            <!-- Recall@10 -->
+                            <div class="space-y-2">
+                                <h5 class="font-semibold text-[#007A5E]">
+                                    Recall@10 (<span x-text="`${(baseline.recallAt10*100).toFixed(1)}%`"></span>)
+                                </h5>
+                                <p class="text-sm text-gray-500">
+                                    <strong>What it means:</strong> Of all relevant documents, what percentage appear in
+                                    the top 10 results?
+                                </p>
+                                <p class="text-sm text-gray-500">
+                                    <strong>The system:</strong>
+                                    <span x-text="(baseline.recallAt10 * 100).toFixed(1)"></span>% of correct answers
+                                    are somewhere in your top 10.
+                                    This is <strong class="text-green-600">GOOD</strong> — it means retrieval is
+                                    working, the right documents are being found.
                                 </p>
                             </div>
                         </div>
 
-                        <!-- Summary box -->
+                        <!-- Summary box (updated to reflect Hit@3) -->
                         <div class="mt-6 p-5 bg-[#007A5E]/5 rounded-xl border border-[#007A5E]/20"
-                             style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 1.0s both; opacity:0;">
+                            style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 1.0s both; opacity:0;">
                             <h5 class="font-bold text-[#007A5E] mb-4">Summary</h5>
                             <ul class="space-y-2 text-sm">
                                 <li class="flex items-start gap-2">
                                     <span class="text-green-600 font-bold mt-0.5">✓</span>
-                                    <span>Your system finds the right documents (<span x-text="`${(baseline.recallAt10*100).toFixed(1)}% recall`"></span>)</span>
+                                    <span>The system finds the right documents (<span
+                                            x-text="`${(baseline.recallAt10*100).toFixed(1)}% recall`"></span>)</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-amber-500 font-bold mt-0.5">⚠</span>
-                                    <span>But doesn't always rank them first (<span x-text="`${(baseline.precisionAt3*100).toFixed(1)}% precision@3`"></span>)</span>
+                                    <span>But doesn't always rank them first (<span
+                                            x-text="`${(baseline.precisionAt3*100).toFixed(1)}% precision@3`"></span>)</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-green-600 font-bold mt-0.5">✓</span>
-                                    <span>The reranker improves top-position accuracy (MRR: <span x-text="`${baseline.mrr.toFixed(3)} → ${ranked.mrr.toFixed(3)}`"></span>)</span>
+                                    <span>The reranker improves top‑position accuracy (MRR: <span
+                                            x-text="`${baseline.mrr.toFixed(3)} → ${ranked.mrr.toFixed(3)}`"></span>)</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-green-600 font-bold mt-0.5">✓</span>
-                                    <span>On average, the answer is in position <span x-text="(1 / ranked.mrr).toFixed(1)"></span> after reranking</span>
+                                    <span>Hit@3 increased from <span
+                                            x-text="`${(baseline.hitAt3*100).toFixed(1)}%`"></span> to <span
+                                            x-text="`${(ranked.hitAt3*100).toFixed(1)}%`"></span> after reranking</span>
                                 </li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
-
                 <!-- ── DOCUMENT GRANULARITY COMPARISON ───────────── -->
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8"
-                     style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.3s both; opacity:0;">
+                    style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.3s both; opacity:0;">
 
                     <h3 class="text-xl font-bold text-gray-900 mb-1">Document Granularity Comparison</h3>
-                    <p class="text-sm text-gray-400 mb-6">Comparing search performance across different levels of document segmentation</p>
+                    <p class="text-sm text-gray-400 mb-6">Comparing search performance across different levels of
+                        document segmentation</p>
 
                     <div class="overflow-x-auto">
                         <table class="w-full">
@@ -286,12 +265,12 @@
                                 <tr class="border-b-2 border-gray-200">
                                     <th class="text-left py-3 px-4 font-semibold text-gray-700">Metric</th>
                                     <th class="text-center py-3 px-4 font-semibold text-[#CE1126]">Full Document</th>
-                                    <th class="text-center py-3 px-4 font-semibold text-[#F9A825]">Section/Article Level</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-[#FCD116]">Section/Article Level
+                                    </th>
                                     <th class="text-center py-3 px-4 font-semibold text-[#007A5E]">Clause Level</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Precision@3 -->
                                 <template x-for="(gRow, gIndex) in granularityRows" :key="gRow.key">
                                     <tr class="row-enter border-b border-gray-100 hover:bg-gray-50 transition-colors"
                                         :style="`animation-delay: ${0.4 + gIndex * 0.1}s`">
@@ -304,15 +283,14 @@
                                         <!-- Full Document (red) -->
                                         <td class="text-center py-4 px-4">
                                             <div class="inline-block scale-enter"
-                                                 :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
-                                                <span class="text-2xl font-bold text-[#CE1126]"
-                                                      x-text="gRow.isCount
+                                                :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
+                                                <span class="text-2xl font-bold text-[#CE1126]" x-text="gRow.isCount
                                                           ? granularity.document[gRow.key]
                                                           : `${(granularity.document[gRow.key] * 100).toFixed(1)}%`">
                                                 </span>
-                                                <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
-                                                    <div class="h-full bg-[#CE1126] rounded-full bar-fill"
-                                                         :data-width="gRow.isCount
+                                                <div
+                                                    class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#CE1126] rounded-full bar-fill" :data-width="gRow.isCount
                                                              ? `${(granularity.document[gRow.key] / 20) * 100}%`
                                                              : `${granularity.document[gRow.key] * 100}%`">
                                                     </div>
@@ -320,18 +298,17 @@
                                             </div>
                                         </td>
 
-                                        <!-- Section/Article Level (orange) -->
+                                        <!-- Section/Article Level (yellow) -->
                                         <td class="text-center py-4 px-4">
                                             <div class="inline-block scale-enter"
-                                                 :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
-                                                <span class="text-2xl font-bold text-[#F9A825]"
-                                                      x-text="gRow.isCount
+                                                :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
+                                                <span class="text-2xl font-bold text-[#FCD116]" x-text="gRow.isCount
                                                           ? granularity.as[gRow.key]
                                                           : `${(granularity.as[gRow.key] * 100).toFixed(1)}%`">
                                                 </span>
-                                                <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
-                                                    <div class="h-full bg-[#F9A825] rounded-full bar-fill"
-                                                         :data-width="gRow.isCount
+                                                <div
+                                                    class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#FCD116] rounded-full bar-fill" :data-width="gRow.isCount
                                                              ? `${(granularity.as[gRow.key] / 20) * 100}%`
                                                              : `${granularity.as[gRow.key] * 100}%`">
                                                     </div>
@@ -342,15 +319,14 @@
                                         <!-- Clause Level (green) -->
                                         <td class="text-center py-4 px-4">
                                             <div class="inline-block scale-enter"
-                                                 :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
-                                                <span class="text-2xl font-bold text-[#007A5E]"
-                                                      x-text="gRow.isCount
+                                                :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
+                                                <span class="text-2xl font-bold text-[#007A5E]" x-text="gRow.isCount
                                                           ? granularity.clause[gRow.key]
                                                           : `${(granularity.clause[gRow.key] * 100).toFixed(1)}%`">
                                                 </span>
-                                                <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
-                                                    <div class="h-full bg-[#007A5E] rounded-full bar-fill"
-                                                         :data-width="gRow.isCount
+                                                <div
+                                                    class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#007A5E] rounded-full bar-fill" :data-width="gRow.isCount
                                                              ? `${(granularity.clause[gRow.key] / 20) * 100}%`
                                                              : `${granularity.clause[gRow.key] * 100}%`">
                                                     </div>
@@ -365,7 +341,7 @@
 
                     <!-- ── KEY INSIGHTS ──────────────────────────── -->
                     <div class="mt-8 pt-6 border-t border-gray-100"
-                         style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 1.0s both; opacity:0;">
+                        style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 1.0s both; opacity:0;">
 
                         <h4 class="font-bold text-gray-900 text-lg mb-4">Key Insights on Document Granularity</h4>
 
@@ -378,15 +354,18 @@
                                     <span>
                                         <strong>Higher Precision:</strong>
                                         Clause-level segmentation achieves
-                                        <span x-text="`${(granularity.clause.precisionAt3 * 100).toFixed(1)}% P@3`"></span>,
+                                        <span
+                                            x-text="`${(granularity.clause.precisionAt3 * 100).toFixed(1)}% P@3`"></span>,
                                         compared to
-                                        <span x-text="`${(granularity.document.precisionAt3 * 100).toFixed(1)}%`"></span>
+                                        <span
+                                            x-text="`${(granularity.document.precisionAt3 * 100).toFixed(1)}%`"></span>
                                         for full documents
                                     </span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-[#007A5E] font-bold mt-0.5">→</span>
-                                    <span><strong>Reduced Noise:</strong> Smaller units mean less irrelevant content diluting the match score</span>
+                                    <span><strong>Reduced Noise:</strong> Smaller units mean less irrelevant content
+                                        diluting the match score</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-[#007A5E] font-bold mt-0.5">→</span>
@@ -399,7 +378,8 @@
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-[#007A5E] font-bold mt-0.5">→</span>
-                                    <span><strong>Legal Specificity:</strong> Legal queries often target specific clauses, not entire documents</span>
+                                    <span><strong>Legal Specificity:</strong> Legal queries often target specific
+                                        clauses, not entire documents</span>
                                 </li>
                             </ul>
                         </div>
@@ -417,12 +397,13 @@
                             </div>
 
                             <!-- Section/Article Level — orange -->
-                            <div class="p-5 bg-[#F9A825]/5 rounded-xl border border-[#F9A825]/20">
-                                <h5 class="font-bold text-[#F9A825] mb-2">Section/Article Level</h5>
+                            <div class="p-5 bg-[#FCD116]/5 rounded-xl border border-[#FCD116]/20">
+                                <h5 class="font-bold text-[#FCD116] mb-2">Section/Article Level</h5>
                                 <p class="text-sm text-gray-600">
                                     Better than full documents but still contains multiple concepts.
                                     Improvement of
-                                    <span x-text="`${(((granularity.as.precisionAt3 - granularity.document.precisionAt3) / granularity.document.precisionAt3) * 100).toFixed(1)}%`"></span>
+                                    <span
+                                        x-text="`${(((granularity.as.precisionAt3 - granularity.document.precisionAt3) / granularity.document.precisionAt3) * 100).toFixed(1)}%`"></span>
                                     in P@3.
                                 </p>
                             </div>
@@ -432,7 +413,8 @@
                                 <h5 class="font-bold text-[#007A5E] mb-2">Clause Level (Best)</h5>
                                 <p class="text-sm text-gray-600">
                                     Optimal granularity for legal search. Each unit is focused and specific, leading to
-                                    <span x-text="`${(((granularity.clause.precisionAt3 - granularity.document.precisionAt3) / granularity.document.precisionAt3) * 100).toFixed(1)}%`"></span>
+                                    <span
+                                        x-text="`${(((granularity.clause.precisionAt3 - granularity.document.precisionAt3) / granularity.document.precisionAt3) * 100).toFixed(1)}%`"></span>
                                     improvement over full documents.
                                 </p>
                             </div>
@@ -448,52 +430,50 @@
 
                         <!-- Legal Corpus -->
                         <div class="card-enter bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow"
-                             style="animation-delay: 0.7s">
+                            style="animation-delay: 0.7s">
                             <div class="flex items-center gap-3 mb-3">
                                 <i data-lucide="file-text" class="w-6 h-6 text-[#007A5E]"></i>
                                 <h4 class="font-semibold text-gray-900">Legal Corpus</h4>
                             </div>
                             <p class="text-3xl font-bold text-[#007A5E] mb-2"
-                               x-text="systemData.legalCorpusSize.toLocaleString()">
+                                x-text="systemData.legalCorpusSize.toLocaleString()">
                             </p>
                             <p class="text-sm text-gray-400">Legal units after section and article split</p>
                         </div>
 
                         <!-- Inverted Index Size -->
                         <div class="card-enter bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow"
-                             style="animation-delay: 0.8s">
+                            style="animation-delay: 0.8s">
                             <div class="flex items-center gap-3 mb-3">
                                 <i data-lucide="database" class="w-6 h-6 text-[#CE1126]"></i>
                                 <h4 class="font-semibold text-gray-900">Inverted Index Size</h4>
                             </div>
                             <p class="text-3xl font-bold text-[#CE1126] mb-2"
-                               x-text="systemData.invertedIndexSize.toLocaleString()">
+                                x-text="systemData.invertedIndexSize.toLocaleString()">
                             </p>
                             <p class="text-sm text-gray-400">Terms in inverted index</p>
                         </div>
 
                         <!-- Ground Truth -->
                         <div class="card-enter bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow"
-                             style="animation-delay: 0.9s">
+                            style="animation-delay: 0.9s">
                             <div class="flex items-center gap-3 mb-3">
-                                <i data-lucide="target" class="w-6 h-6 text-[#F9A825]"></i>
+                                <i data-lucide="target" class="w-6 h-6 text-[#FCD116]"></i>
                                 <h4 class="font-semibold text-gray-900">Ground Truth</h4>
                             </div>
-                            <p class="text-3xl font-bold text-[#F9A825] mb-2"
-                               x-text="systemData.groundTruthQueries">
+                            <p class="text-3xl font-bold text-[#FCD116] mb-2" x-text="systemData.groundTruthQueries">
                             </p>
                             <p class="text-sm text-gray-400">Queries for evaluation</p>
                         </div>
 
                         <!-- Diagnostics -->
                         <div class="card-enter bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow"
-                             style="animation-delay: 1.0s">
+                            style="animation-delay: 1.0s">
                             <div class="flex items-center gap-3 mb-3">
                                 <i data-lucide="alert-circle" class="w-6 h-6 text-red-600"></i>
                                 <h4 class="font-semibold text-gray-900">Diagnostics</h4>
                             </div>
-                            <p class="text-3xl font-bold text-red-600 mb-2"
-                               x-text="systemData.failedQueries">
+                            <p class="text-3xl font-bold text-red-600 mb-2" x-text="systemData.failedQueries">
                             </p>
                             <p class="text-sm text-gray-400">Failed queries from ground_truth.json</p>
                         </div>
@@ -505,99 +485,8 @@
     </div><!-- end page wrapper -->
 
     <!-- ── ALPINE APP LOGIC ───────────────────────────────────────── -->
-    <script>
-        function metricsApp() {
-            return {
-                isLoading: true,
-
-                // Populated from /api/metrics
-                baseline:    {},
-                ranked:      {},
-                granularity: {},   // {document, as, clause}
-                systemData:  {},
-
-                // Table row definitions — purely presentational, no data here
-                metricRows: [
-                    { key: "precisionAt3", label: "Precision@3",          description: "Precision at rank 3" },
-                    { key: "precisionAt5", label: "Precision@5",          description: "Precision at rank 5" },
-                    { key: "recallAt10",   label: "Recall@10",            description: "Recall at rank 10"   },
-                    { key: "mrr",          label: "Mean Reciprocal Rank", description: "Average reciprocal rank" },
-                ],
-
-                // Granularity comparison rows
-                // isCount: true  → render as raw integer (no % conversion, bar scaled against 20 max)
-                // isCount: false → render as percentage
-                granularityRows: [
-                    { key: "precisionAt3", label: "Precision@3",          description: "Precision at rank 3",              isCount: false },
-                    { key: "precisionAt5", label: "Precision@5",          description: "Precision at rank 5",              isCount: false },
-                    { key: "recallAt10",   label: "Recall@10",            description: "Recall at rank 10",                isCount: false },
-                    { key: "mrr",          label: "Mean Reciprocal Rank", description: "Average reciprocal rank",          isCount: false },
-                    { key: "failedQueries",label: "Failed Queries",       description: "Queries with no relevant results", isCount: true  },
-                ],
-
-                async init() {
-                    lucide.createIcons();
-
-                    try {
-                        const res  = await fetch('/api/metrics');
-                        const data = await res.json();
-
-                        this.baseline    = data.baseline;
-                        this.ranked      = data.ranked;
-                        // Attach per-level failed query counts from systemData into granularity
-                        // so granularityRows can read them with the same gRow.key pattern
-                        data.granularity.clause.failedQueries   = data.systemData.failedQueries;
-                        data.granularity.as.failedQueries       = data.systemData.failedQueries_as;
-                        data.granularity.document.failedQueries = data.systemData.failedQueries_document;
-                        this.granularity = data.granularity;
-                        this.systemData  = data.systemData;
-
-                    } catch (err) {
-                        console.error('Failed to load metrics:', err);
-                    } finally {
-                        this.isLoading = false;
-
-                        // After Alpine renders the DOM, trigger progress bar animations
-                        // and re-init lucide icons inside the dynamic content
-                        this.$nextTick(() => {
-                            lucide.createIcons();
-                            this.animateBars();
-                        });
-                    }
-                },
-
-                // Calculates improvement % between ranked and baseline for a given key
-                improvement(key) {
-                    const b = this.baseline[key];
-                    const r = this.ranked[key];
-                    if (!b) return 0;
-                    return ((r - b) / b) * 100;
-                },
-
-                // Returns the formatted improvement label e.g. "+13.9%" or "0.0%"
-                improvementLabel(key) {
-                    const imp = this.improvement(key);
-                    const formatted = imp.toFixed(1) + '%';
-                    return imp > 0 ? '+' + formatted : formatted;
-                },
-
-                // Triggers CSS progress bar fills after data renders
-                // We set width via JS because CSS can't read dynamic Alpine data
-                animateBars() {
-                    document.querySelectorAll('.bar-fill').forEach(bar => {
-                        const targetWidth = bar.getAttribute('data-width');
-                        if (targetWidth) {
-                            // Small timeout so the transition actually plays
-                            // (if we set width immediately after display:block, browser skips the transition)
-                            setTimeout(() => {
-                                bar.style.width = targetWidth;
-                            }, 50);
-                        }
-                    });
-                },
-            };
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/metrics.js') }}"></script>
 
 </body>
+
 </html>
