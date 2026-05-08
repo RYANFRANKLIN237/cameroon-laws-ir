@@ -3,7 +3,7 @@ from src.evaluation import get_metrics
 from src.diagnostic import get_system_data
 from src.tfidf_search import search as tfidf_search
 from src.utils import transform_result
-from app import translate_client, pdf_file_map, pdf_storage_path  
+from app import pdf_file_map, pdf_storage_path  
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -47,7 +47,7 @@ def translate_text():
         return jsonify({"translatedText": translation_cache[cache_key]})
 
     try:
-        result = translate_client.translate(
+        result = current_app.translate_client.translate(
             text,
             source_language=source,
             target_language=target
@@ -56,6 +56,7 @@ def translate_text():
         translation_cache[cache_key] = translated
         return jsonify({"translatedText": translated})
     except Exception as e:
+        current_app.logger.exception("Translation failed")
         return jsonify({"error": str(e)}), 500
 
 @api_bp.route('/metrics')

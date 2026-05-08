@@ -65,12 +65,8 @@ pydantic==2.12.5
 pydantic_core==2.41.5
 Pygments==2.19.2
 pypdfium2==5.1.0
-PyQt5==5.15.11
-PyQt5-Qt5==5.15.18
-PyQt5_sip==12.18.0
 python-dotenv==1.2.2
 PyYAML==6.0.3
-rank-bm25==0.2.2
 regex==2025.11.3
 requests==2.32.5
 rich==14.3.3
