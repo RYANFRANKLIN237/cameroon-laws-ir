@@ -73,6 +73,7 @@ def evaluate(use_rerank=False, granularity="clause"):
     p3_scores = []
     r10_scores = []
     mrr_scores = []
+    failed_count = 0
 
     for query, relevant_docs in ground_truth.items():
 
@@ -90,11 +91,20 @@ def evaluate(use_rerank=False, granularity="clause"):
         r10_scores.append(recall_at_k(retrieved_docs, relevant_docs, 10))
         mrr_scores.append(reciprocal_rank(retrieved_docs, relevant_docs))
 
+        first_pos = None
+        for pos, doc_id in enumerate(retrieved_docs, start=1):
+            if doc_id in relevant_docs:
+                first_pos = pos
+                break
+        if first_pos is None or first_pos > 10:
+            failed_count += 1
+
     scores = {
         "hitAt3": round(mean(hit3_scores), 3),
         "precisionAt3": round(mean(p3_scores), 3),
         "recallAt10": round(mean(r10_scores), 3),
         "mrr": round(mean(mrr_scores), 3),
+        "failures": failed_count 
     }
 
     print("\n==============================")
@@ -105,6 +115,8 @@ def evaluate(use_rerank=False, granularity="clause"):
     print(f"MRR:             {scores['mrr']:.3f}")
     print(f"Precision@3:     {scores['precisionAt3']:.3f}")
     print(f"Recall@10:       {scores['recallAt10']:.3f}")
+    print(f"Failures:        {scores['failures']}")
+
 
     return scores
 

@@ -23,6 +23,12 @@ function searchApp() {
             setTimeout(() => { this.loaded = true; }, 100);
         },
 
+        truncateSource(source) {
+            if (!source) return '';
+            if (source.length <= 80) return source;
+            return source.substring(0, 80) + '...';
+        },
+
         // ── Search ─────────────────────────────────────────
         async handleSearch() {
             if (!this.query.trim()) return;
@@ -38,7 +44,7 @@ function searchApp() {
                 const data = await response.json();
 
                 const endTime = performance.now();
-                this.searchTime = (endTime - startTime).toFixed(3);
+                this.searchTime = ((endTime - startTime) / 1000).toFixed(3);
 
                 this.results = data.results;
                 this.hasSearched = true;
@@ -99,7 +105,7 @@ function searchApp() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         text: result.content.slice(0, 1000),
-                        source: result.language,   
+                        source: result.language,
                         target: target
                     })
                 });

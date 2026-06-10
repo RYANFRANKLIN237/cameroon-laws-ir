@@ -3,6 +3,7 @@ import re
 import sys
 import nltk
 from tqdm import tqdm
+import shutil
 
 # NLTK data is assumed to be pre-installed
 # Note: Run python -c "
@@ -42,6 +43,9 @@ def preprocess_text(text):
 
 def preprocess_corpus(input_dir, output_dir):
 
+    
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
     os.makedirs(output_dir, exist_ok=True)
 
     unit_files = [f for f in os.listdir(input_dir) if f.endswith(".txt")]

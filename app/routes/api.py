@@ -3,34 +3,77 @@ from src.evaluation import get_metrics
 from src.diagnostic import get_system_data
 from src.tfidf_search import search as tfidf_search
 from src.utils import transform_result
-from app import pdf_file_map, pdf_storage_path  
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 # Cache for translations (could be moved to a dedicated module)
 translation_cache = {}
 
+
 @api_bp.route('/search')
 def search():
     query = request.args.get('q', '').strip()
     if not query:
-        return jsonify({"results": [], "total": 0, "query": query})
+        return jsonify({
+            "results": [], 
+            "total": 0, 
+            "query": query, 
+            "translated_query": ""
+        })
 
     try:
-        raw_results = tfidf_search(query, top_k=10, use_rerank=True)
+        # 1. Capture the full rich response dictionary from your search script
+        search_payload = tfidf_search(query, top_k=10, use_rerank=True)
+        
+        # 2. Extract exactly what you need out of it
+        final_results = search_payload.get("final_results", [])
+        translated_query = search_payload.get("translated_query", "")
+        
     except Exception as e:
         current_app.logger.error(f"Search failed: {e}")
-        return jsonify({"results": [], "total": 0, "query": query, "error": str(e)})
+        return jsonify({
+            "results": [], 
+            "total": 0, 
+            "query": query, 
+            "translated_query": "",
+            "error": str(e)
+        })
 
+    # 3. Use the extracted final_results list for your display conversion loop
     display_results = [
         transform_result(raw, rank=i + 1, query=query)
-        for i, raw in enumerate(raw_results)
+        for i, raw in enumerate(final_results)
     ]
+    
+    # 4. Return everything back natively inside the JSON response
     return jsonify({
         "results": display_results,
         "total": len(display_results),
         "query": query,
+        "translated_query": translated_query  # Expose this to your frontend application
     })
+
+# @api_bp.route('/search')
+# def search():
+#     query = request.args.get('q', '').strip()
+#     if not query:
+#         return jsonify({"results": [], "total": 0, "query": query})
+
+#     try:
+#         raw_results = tfidf_search(query, top_k=10, use_rerank=True)
+#     except Exception as e:
+#         current_app.logger.error(f"Search failed: {e}")
+#         return jsonify({"results": [], "total": 0, "query": query, "error": str(e)})
+
+#     display_results = [
+#         transform_result(raw, rank=i + 1, query=query)
+#         for i, raw in enumerate(raw_results)
+#     ]
+#     return jsonify({
+#         "results": display_results,
+#         "total": len(display_results),
+#         "query": query,
+#     })
 
 @api_bp.route('/translate', methods=['POST'])
 def translate_text():
@@ -59,11 +102,30 @@ def translate_text():
         current_app.logger.exception("Translation failed")
         return jsonify({"error": str(e)}), 500
 
+
 @api_bp.route('/metrics')
 def metrics():
-    clause_metrics = get_metrics(mode="clause")
-    granularity_metrics = get_metrics(mode="all")
-    system_data = get_system_data()
+    # 1. Get granularity metrics (each includes 'failures')
+    clause_metrics = get_metrics(mode="clause")          # {baseline, ranked}
+    granularity_metrics = get_metrics(mode="all")        # {clause, as, document}
+
+    # 2. Get static system data (corpus size, index size, total queries)
+    static_data = get_system_data()
+
+    # 3. Extract failure counts from the metrics
+    clause_failures = granularity_metrics["clause"]["failures"]
+    as_failures = granularity_metrics["as"]["failures"]
+    document_failures = granularity_metrics["document"]["failures"]
+
+    # 4. Build the complete systemData object
+    system_data = {
+        "legalCorpusSize": static_data["legalCorpusSize"],
+        "invertedIndexSize": static_data["invertedIndexSize"],
+        "groundTruthQueries": static_data["groundTruthQueries"],
+        "failedQueries": clause_failures,
+        "failedQueries_as": as_failures,
+        "failedQueries_document": document_failures,
+    }
 
     return jsonify({
         "baseline": clause_metrics["baseline"],
@@ -75,3 +137,19 @@ def metrics():
         },
         "systemData": system_data,
     })
+# @api_bp.route('/metrics')
+# def metrics():
+#     clause_metrics = get_metrics(mode="clause")
+#     granularity_metrics = get_metrics(mode="all")
+#     system_data = get_system_data()
+
+#     return jsonify({
+#         "baseline": clause_metrics["baseline"],
+#         "ranked": clause_metrics["ranked"],
+#         "granularity": {
+#             "document": granularity_metrics["document"],
+#             "as": granularity_metrics["as"],
+#             "clause": granularity_metrics["clause"],
+#         },
+#         "systemData": system_data,
+#     })
