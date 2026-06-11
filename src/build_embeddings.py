@@ -45,6 +45,7 @@ def build_embeddings(unit_type):
     model = TextEmbedding(
         model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     )
+    
 
     unit_files = sorted(
         [f for f in os.listdir(processed_dir)
@@ -140,6 +141,24 @@ def build_embeddings(unit_type):
     print(f"  FR -> {index_dir}/embeddings_fr.npy")
 
 
+
+def print_supported_models():
+    # Retrieve the list of dictionaries containing model metadata
+    models = TextEmbedding.list_supported_models()
+    
+    print(f"Total supported TextEmbedding models: {len(models)}\n")
+    print(f"{'Model Name':<50} | {'Dim':<6} | {'Size (GB)':<10} | Description")
+    print("-" * 100)
+    
+    # Loop through and format the output beautifully
+    for model in models:
+        name = model.get("model", "N/A")
+        dim = model.get("dim", "N/A")
+        size = model.get("size_in_GB", "N/A")
+        desc = model.get("description", "No description available.")
+        
+        print(f"{name:<50} | {dim:<6} | {size:<10} | {desc}")
+
 def run_build(granularity):
 
     if granularity == "clause":
@@ -170,4 +189,5 @@ if __name__ == "__main__":
 
     granularity = sys.argv[1].lower()
 
+    # print_supported_models()
     run_build(granularity)

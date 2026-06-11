@@ -1,10 +1,10 @@
 import os
 import re
+import json
 from langdetect import detect, DetectorFactory
 from dotenv import load_dotenv
 from google.cloud import translate_v2 as translate
-from transformers import pipeline, AutoTokenizer, AutoModelForQuestionAnswering
-import torch
+from transformers import pipeline
 
 
 load_dotenv()
@@ -14,9 +14,8 @@ translate_client = translate.Client()
 translation_cache = {}
 
 # Preload ground truth query translations if available
-import os
-import json
-cache_file = os.path.join("data", "ground_truth", "query_translations.json")
+# cache_file = os.path.join("data", "ground_truth", "query_translations.json")
+cache_file = os.path.join("ground_truth", "query_translations.json")
 if os.path.exists(cache_file):
     try:
         with open(cache_file, "r", encoding="utf-8") as f:
@@ -30,45 +29,15 @@ if os.path.exists(cache_file):
     except Exception as e:
         print(f"Failed to load translation cache: {e}")
 
-MODEL_NAME = "deepset/xlm-roberta-base-squad2"
 
-print(f"[INFO] Loading {MODEL_NAME}...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-base_model = AutoModelForQuestionAnswering.from_pretrained(MODEL_NAME)
 
-# 1. CRITICAL: Force the model to CPU and set to evaluation mode FIRST
-base_model.to(torch.device("cpu"))
-base_model.eval()
+        
 
-# 2. Apply Dynamic Quantization safely
-print("[INFO] Quantizing linear layers to INT8...")
-# quantized_model = torch.quantization.quantize_dynamic(
-#     base_model,
-#     {torch.nn.Linear},
-#     dtype=torch.qint8
-# )
-torch.backends.quantized.engine = 'qnnpack'
-
-# 2. Your existing quantization block (Line 28)
-quantized_model = torch.quantization.quantize_dynamic(
-    base_model,
-    {torch.nn.Linear},
-    dtype=torch.qint8
-)
-
-# 3. Initialize pipeline explicitly declaring the CPU device to prevent internal pipeline crashes
-qa_pipeline = pipeline(
-    "question-answering",
-    model=quantized_model,
-    tokenizer=tokenizer,
-    device=-1  # Explicitly forces Hugging Face to treat this as a pure CPU workload
-)
-
-# qa_pipeline = pipeline(
-#     "question-answering",
-#     model="deepset/xlm-roberta-base-squad2",
-#     tokenizer="deepset/xlm-roberta-base-squad2" 
-# )
+    qa_pipeline = pipeline(
+        "question-answering",
+        model="deepset/xlm-roberta-base-squad2",
+        tokenizer="deepset/xlm-roberta-base-squad2" 
+    )
 
 def normalize_filename(name):
     if not name:
@@ -259,20 +228,20 @@ CONFIG = {
         "inverted_index_en": "inverted_index_as_en.json",
         "inverted_index_fr": "inverted_index_as_fr.json",
 
-        "tfidf_matrix_en": "tfidf_matrix_as_en.npz",
-        "tfidf_matrix_fr": "tfidf_matrix_as_fr.npz",
+        "tfidf_matrix_en": "tfidf_matrix_en.npz",
+        "tfidf_matrix_fr": "tfidf_matrix_fr.npz",
 
-        "unit_ids_en": "tfidf_unit_ids_as_en.json",
-        "unit_ids_fr": "tfidf_unit_ids_as_fr.json",
+        "unit_ids_en": "tfidf_unit_ids_en.json",
+        "unit_ids_fr": "tfidf_unit_ids_fr.json",
 
-        "vectorizer_en": "tfidf_vectorizer_as_en.joblib",
-        "vectorizer_fr": "tfidf_vectorizer_as_fr.joblib",
+        "vectorizer_en": "tfidf_vectorizer_en.joblib",
+        "vectorizer_fr": "tfidf_vectorizer_fr.joblib",
 
-        "embeddings_en": "embeddings_as_en.npy",
-        "embeddings_fr": "embeddings_as_fr.npy",
+        "embeddings_en": "embeddings_en.npy",
+        "embeddings_fr": "embeddings_fr.npy",
 
-        "embedding_ids_en": "embedding_unit_ids_as_en.json",
-        "embedding_ids_fr": "embedding_unit_ids_as_fr.json"
+        "embedding_ids_en": "embedding_unit_ids_en.json",
+        "embedding_ids_fr": "embedding_unit_ids_fr.json"
     },
 
     "document": {
@@ -283,20 +252,20 @@ CONFIG = {
         "inverted_index_en": "inverted_index_document_en.json",
         "inverted_index_fr": "inverted_index_document_fr.json",
 
-        "tfidf_matrix_en": "tfidf_matrix_document_en.npz",
-        "tfidf_matrix_fr": "tfidf_matrix_document_fr.npz",
+        "tfidf_matrix_en": "tfidf_matrix_en.npz",
+        "tfidf_matrix_fr": "tfidf_matrix_fr.npz",
 
-        "unit_ids_en": "tfidf_unit_ids_document_en.json",
-        "unit_ids_fr": "tfidf_unit_ids_document_fr.json",
+        "unit_ids_en": "tfidf_unit_ids_en.json",
+        "unit_ids_fr": "tfidf_unit_ids_fr.json",
 
-        "vectorizer_en": "tfidf_vectorizer_document_en.joblib",
-        "vectorizer_fr": "tfidf_vectorizer_document_fr.joblib",
+        "vectorizer_en": "tfidf_vectorizer_en.joblib",
+        "vectorizer_fr": "tfidf_vectorizer_fr.joblib",
 
-        "embeddings_en": "embeddings_document_en.npy",
-        "embeddings_fr": "embeddings_document_fr.npy",
+        "embeddings_en": "embeddings_en.npy",
+        "embeddings_fr": "embeddings_fr.npy",
 
-        "embedding_ids_en": "embedding_unit_ids_document_en.json",
-        "embedding_ids_fr": "embedding_unit_ids_document_fr.json"
+        "embedding_ids_en": "embedding_unit_ids_en.json",
+        "embedding_ids_fr": "embedding_unit_ids_fr.json"
     }
 
 }

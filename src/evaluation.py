@@ -7,9 +7,9 @@ from src.tfidf_search import search
 
 
 GROUND_TRUTH_FILES = {
-    "clause": os.path.join("data", "ground_truth", "ground_truth.json"),
-    "as": os.path.join("data", "ground_truth", "ground_truth_as.json"),
-    "document": os.path.join("data", "ground_truth", "ground_truth_document.json")
+    "clause": os.path.join("ground_truth", "ground_truth.json"),
+    "as": os.path.join("ground_truth", "ground_truth_as.json"),
+    "document": os.path.join("ground_truth", "ground_truth_document.json")
 }
 
 
@@ -77,14 +77,14 @@ def evaluate(use_rerank=False, granularity="clause"):
 
     for query, relevant_docs in ground_truth.items():
 
-        results = search(
+        result_dict = search(
             query,
             top_k=20,
             use_rerank=use_rerank,
             granularity=granularity
         )
 
-        retrieved_docs = [r["unit_id"] for r in results]
+        retrieved_docs = [r["unit_id"] for r in result_dict["final_results"]]
 
         hit3_scores.append(hit_at_k(retrieved_docs, relevant_docs, 3))
         p3_scores.append(precision_at_k(retrieved_docs, relevant_docs, 3))

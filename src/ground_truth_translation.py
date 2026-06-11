@@ -9,13 +9,13 @@ from src.utils import translate_text, detect_language
 
 def main():
     ground_truth_files = [
-        "data/ground_truth/ground_truth.json",
-        "data/ground_truth/ground_truth_as.json",
-        "data/ground_truth/ground_truth_document.json"
+        "ground_truth/ground_truth.json",
+        "ground_truth/ground_truth_as.json",
+        "ground_truth/ground_truth_document.json"
     ]
 
     translations = {}
-    output_path = "data/ground_truth/query_translations.json"
+    output_path = "ground_truth/query_translations.json"
 
     # Load existing translations if the file already exists
     if os.path.exists(output_path):
