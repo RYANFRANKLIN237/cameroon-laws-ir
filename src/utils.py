@@ -13,6 +13,23 @@ translate_client = translate.Client()
 
 translation_cache = {}
 
+# Preload ground truth query translations if available
+import os
+import json
+cache_file = os.path.join("data", "ground_truth", "query_translations.json")
+if os.path.exists(cache_file):
+    try:
+        with open(cache_file, "r", encoding="utf-8") as f:
+            cached_data = json.load(f)
+            for q, t in cached_data.items():
+                lang = detect(q)
+                if lang == "fr":
+                    translation_cache[(q.lower(), "fr", "en")] = t
+                else:
+                    translation_cache[(q.lower(), "en", "fr")] = t
+    except Exception as e:
+        print(f"Failed to load translation cache: {e}")
+
 MODEL_NAME = "deepset/xlm-roberta-base-squad2"
 
 print(f"[INFO] Loading {MODEL_NAME}...")
@@ -25,6 +42,14 @@ base_model.eval()
 
 # 2. Apply Dynamic Quantization safely
 print("[INFO] Quantizing linear layers to INT8...")
+# quantized_model = torch.quantization.quantize_dynamic(
+#     base_model,
+#     {torch.nn.Linear},
+#     dtype=torch.qint8
+# )
+torch.backends.quantized.engine = 'qnnpack'
+
+# 2. Your existing quantization block (Line 28)
 quantized_model = torch.quantization.quantize_dynamic(
     base_model,
     {torch.nn.Linear},

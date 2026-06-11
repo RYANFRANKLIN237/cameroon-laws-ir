@@ -1,4 +1,6 @@
 import os
+os.environ["FASTEMBED_CACHE_PATH"] = "./models"
+
 import json
 import sys
 import numpy as np
@@ -41,7 +43,7 @@ def build_embeddings(unit_type):
     os.makedirs(index_dir, exist_ok=True)
 
     model = TextEmbedding(
-        model_name="BAAI/bge-small-en-v1.5"
+        model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     )
 
     unit_files = sorted(

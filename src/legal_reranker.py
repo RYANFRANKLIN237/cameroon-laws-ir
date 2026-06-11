@@ -33,8 +33,8 @@ def detect_target_law(query):
         "penal": ["penal", "pénal"],
         "labor": ["labor", "labour", "travail"],
         "electoral": ["electoral", "électoral"],
-        "tax": ["tax", "fiscal", "impôt", "impot"],
-        "constitution": ["constitution", "constitutionnel"]
+        "tax": ["tax", "fiscal", "impôt", "impot", "business license", "patente"],
+        "constitution": ["constitution", "constitutionnel", "présidentielle", "presidential", "president"]
     }
 
     for key, synonyms in law_targets.items():

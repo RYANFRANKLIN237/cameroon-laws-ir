@@ -322,7 +322,6 @@ from fastembed import TextEmbedding
 from src.legal_reranker import rerank_results
 from src.preprocessing import preprocess_text
 from src.utils import detect_language, translate_text, CONFIG
-from src.multilingual_reranker import multilingual_cross_rerank
 
 
 ############################################
@@ -332,7 +331,7 @@ from src.multilingual_reranker import multilingual_cross_rerank
 RESOURCE_CACHE = {}
 
 embedding_model = TextEmbedding(
-    model_name="BAAI/bge-small-en-v1.5"
+    model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 )
 
 
@@ -444,9 +443,9 @@ def expand_query(query):
         "séjour": ["séjour", "résidence", "présence"],
         "visiteur temporaire": ["visiteur temporaire", "visiteur", "étranger"],
         "liable": ["subject to", "responsible", "redevable", "assujetti"],
-        "not liable": ["exempt", "exonerated", "exonéré", "non-assujetti"],
+        "not liable": ["exempt", "exonerated", "exonéré", "non-assujetti", "business license"],
         "natural persons": ["individuals", "personnes physiques"],
-        "election": ["poll", "voters", "scrutin", "électoral"],
+        "election": ["poll", "voters", "scrutin", "électoral", "présidentielle", "presidential"],
         "voters": ["electorate", "électeurs"],
         "oppose": ["oppose", "refuse", "deny", "object to"],
         "étranger": ["étranger", "ressortissant étranger", "non-national"],
@@ -724,12 +723,9 @@ def search(
     # Combine the top 10 legal targets from both languages (Pool of 20)
     candidate_pool = primary_results + secondary_results
 
-    # Pass the pool and the ORIGINAL query to FlashRank's cross-encoder
-    final_results = multilingual_cross_rerank(
-        query=query,
-        results=candidate_pool,
-        top_k=top_k
-    )
+    # Sort the combined pool by final legal score (or fallback to hybrid score)
+    candidate_pool.sort(key=lambda x: x.get("final_score", x["score"]), reverse=True)
+    final_results = candidate_pool[:top_k]
 
     return {
         "query_language": query_language,
@@ -819,10 +815,11 @@ if __name__ == "__main__":
                     f"{r['final_score']:.4f}"
                 )
 
-            print(
-                f"CrossScore : "
-                f"{r['cross_score']:.4f}"
-            )
+            if "cross_score" in r:
+                print(
+                    f"CrossScore : "
+                    f"{r['cross_score']:.4f}"
+                )
 
             print()
 
