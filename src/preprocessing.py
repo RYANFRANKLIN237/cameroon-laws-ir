@@ -30,8 +30,8 @@ PROCESSED_DIR_FULL = os.path.join("data", "processed_unit_full")
 def preprocess_text(text):
     text = text.lower()
     
-    # Keep hyphens, parentheses for legal citations
-    text = re.sub(r"[^a-z0-9\s\-()./]", " ", text)
+    # Keep hyphens, parentheses for legal citations, and accented chars for French
+    text = re.sub(r"[^a-z0-9\s\-()./àâäéèêëîïôùûüçæœ]", " ", text)
     
     tokens = nltk.word_tokenize(text)
 

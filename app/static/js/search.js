@@ -25,8 +25,8 @@ function searchApp() {
 
         truncateSource(source) {
             if (!source) return '';
-            if (source.length <= 80) return source;
-            return source.substring(0, 80) + '...';
+            if (source.length <= 75) return source;
+            return source.substring(0, 75) + '...';
         },
 
         // ── Search ─────────────────────────────────────────

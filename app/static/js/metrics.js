@@ -33,7 +33,7 @@ function metricsApp() {
                 try {
                     const data = JSON.parse(cached);
                     this.applyMetricsData(data);
-                    return; // Done – no API call
+                    return; 
                 } catch (e) {
                     console.warn('Failed to parse cached metrics data', e);
                 }
@@ -43,12 +43,11 @@ function metricsApp() {
             try {
                 const res = await fetch('/api/metrics');
                 const data = await res.json();
-                // Store in sessionStorage for subsequent visits in this tab
                 sessionStorage.setItem('metricsData', JSON.stringify(data));
                 this.applyMetricsData(data);
             } catch (err) {
                 console.error('Failed to load metrics:', err);
-                this.isLoading = false; // ensure loading stops on error
+                this.isLoading = false;
             }
         },
 
@@ -56,7 +55,7 @@ function metricsApp() {
         applyMetricsData(data) {
             this.baseline = data.baseline;
             this.ranked = data.ranked;
-            // Attach per-level failed query counts
+            
             data.granularity.clause.failedQueries = data.systemData.failedQueries;
             data.granularity.as.failedQueries = data.systemData.failedQueries_as;
             data.granularity.document.failedQueries = data.systemData.failedQueries_document;
