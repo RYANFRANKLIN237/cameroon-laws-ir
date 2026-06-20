@@ -62,6 +62,13 @@ def reciprocal_rank(retrieved, relevant):
 
     return 0
 
+def avg_result_length(results):
+    """Average word count of the 'text' field of returned results."""
+    if not results:
+        return 0
+    lengths = [len(r.get("text", "").split()) for r in results]
+    return round(mean(lengths), 1)    
+
 
 
 
@@ -74,6 +81,7 @@ def evaluate(use_rerank=False, granularity="clause"):
     r10_scores = []
     mrr_scores = []
     failed_count = 0
+    length_scores = []
 
     for query, relevant_docs in ground_truth.items():
 
@@ -83,13 +91,14 @@ def evaluate(use_rerank=False, granularity="clause"):
             use_rerank=use_rerank,
             granularity=granularity
         )
-
-        retrieved_docs = [r["unit_id"] for r in result_dict["final_results"]]
+        final_results = result_dict["final_results"]
+        retrieved_docs = [r["unit_id"] for r in final_results]
 
         hit3_scores.append(hit_at_k(retrieved_docs, relevant_docs, 3))
         p3_scores.append(precision_at_k(retrieved_docs, relevant_docs, 3))
         r10_scores.append(recall_at_k(retrieved_docs, relevant_docs, 10))
         mrr_scores.append(reciprocal_rank(retrieved_docs, relevant_docs))
+        length_scores.append(avg_result_length(final_results))
 
         first_pos = None
         for pos, doc_id in enumerate(retrieved_docs, start=1):
@@ -104,7 +113,8 @@ def evaluate(use_rerank=False, granularity="clause"):
         "precisionAt3": round(mean(p3_scores), 3),
         "recallAt10": round(mean(r10_scores), 3),
         "mrr": round(mean(mrr_scores), 3),
-        "failures": failed_count 
+        "failures": failed_count,
+        "avg_result_length": round(mean(length_scores), 1) if length_scores else 0 
     }
 
     print("\n==============================")
@@ -116,6 +126,7 @@ def evaluate(use_rerank=False, granularity="clause"):
     print(f"Precision@3:     {scores['precisionAt3']:.3f}")
     print(f"Recall@10:       {scores['recallAt10']:.3f}")
     print(f"Failures:        {scores['failures']}")
+    print(f"Avg. length:     {scores['avg_result_length']} words")
 
 
     return scores

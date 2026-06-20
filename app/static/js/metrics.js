@@ -22,6 +22,7 @@ function metricsApp() {
             { key: "mrr", label: "Mean Reciprocal Rank", description: "Average reciprocal rank", isCount: false },
             { key: "recallAt10", label: "Recall@10", description: "Recall at rank 10", isCount: false },
             { key: "failedQueries", label: "Failed Queries", description: "Queries with no relevant results", isCount: true },
+            { key: "avg_result_length", label: "Avg Length (words)", description: "Average result length in words", isCount: false, isLength: true },
         ],
 
         async init() {
@@ -33,7 +34,7 @@ function metricsApp() {
                 try {
                     const data = JSON.parse(cached);
                     this.applyMetricsData(data);
-                    return; 
+                    return;
                 } catch (e) {
                     console.warn('Failed to parse cached metrics data', e);
                 }
@@ -55,7 +56,7 @@ function metricsApp() {
         applyMetricsData(data) {
             this.baseline = data.baseline;
             this.ranked = data.ranked;
-            
+
             data.granularity.clause.failedQueries = data.systemData.failedQueries;
             data.granularity.as.failedQueries = data.systemData.failedQueries_as;
             data.granularity.document.failedQueries = data.systemData.failedQueries_document;

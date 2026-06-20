@@ -5,7 +5,6 @@ import json
 import joblib
 import numpy as np
 
-from concurrent.futures import ThreadPoolExecutor
 from scipy.sparse import load_npz
 from sklearn.metrics.pairwise import cosine_similarity
 from fastembed import TextEmbedding
