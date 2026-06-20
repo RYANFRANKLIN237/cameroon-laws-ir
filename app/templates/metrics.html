@@ -284,13 +284,15 @@
                                         <td class="text-center py-4 px-4">
                                             <div class="inline-block scale-enter"
                                                 :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
-                                                <span class="text-2xl font-bold text-[#CE1126]" x-text="gRow.isCount
+                                                <span class="text-2xl font-bold text-[#CE1126]"
+                                                      x-text="gRow.isCount || gRow.isLength
                                                           ? granularity.document[gRow.key]
                                                           : `${(granularity.document[gRow.key] * 100).toFixed(1)}%`">
                                                 </span>
-                                                <div
-                                                    class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
-                                                    <div class="h-full bg-[#CE1126] rounded-full bar-fill" :data-width="gRow.isCount
+                                                <div x-show="!gRow.isLength"
+                                                     class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#CE1126] rounded-full bar-fill"
+                                                         :data-width="gRow.isCount
                                                              ? `${(granularity.document[gRow.key] / 20) * 100}%`
                                                              : `${granularity.document[gRow.key] * 100}%`">
                                                     </div>
@@ -302,13 +304,15 @@
                                         <td class="text-center py-4 px-4">
                                             <div class="inline-block scale-enter"
                                                 :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
-                                                <span class="text-2xl font-bold text-[#FCD116]" x-text="gRow.isCount
+                                                <span class="text-2xl font-bold text-[#FCD116]"
+                                                      x-text="gRow.isCount || gRow.isLength
                                                           ? granularity.as[gRow.key]
                                                           : `${(granularity.as[gRow.key] * 100).toFixed(1)}%`">
                                                 </span>
-                                                <div
-                                                    class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
-                                                    <div class="h-full bg-[#FCD116] rounded-full bar-fill" :data-width="gRow.isCount
+                                                <div x-show="!gRow.isLength"
+                                                     class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#FCD116] rounded-full bar-fill"
+                                                         :data-width="gRow.isCount
                                                              ? `${(granularity.as[gRow.key] / 20) * 100}%`
                                                              : `${granularity.as[gRow.key] * 100}%`">
                                                     </div>
@@ -320,13 +324,15 @@
                                         <td class="text-center py-4 px-4">
                                             <div class="inline-block scale-enter"
                                                 :style="`animation-delay: ${0.5 + gIndex * 0.1}s`">
-                                                <span class="text-2xl font-bold text-[#007A5E]" x-text="gRow.isCount
+                                                <span class="text-2xl font-bold text-[#007A5E]"
+                                                      x-text="gRow.isCount || gRow.isLength
                                                           ? granularity.clause[gRow.key]
                                                           : `${(granularity.clause[gRow.key] * 100).toFixed(1)}%`">
                                                 </span>
-                                                <div
-                                                    class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
-                                                    <div class="h-full bg-[#007A5E] rounded-full bar-fill" :data-width="gRow.isCount
+                                                <div x-show="!gRow.isLength"
+                                                     class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden w-24 mx-auto">
+                                                    <div class="h-full bg-[#007A5E] rounded-full bar-fill"
+                                                         :data-width="gRow.isCount
                                                              ? `${(granularity.clause[gRow.key] / 20) * 100}%`
                                                              : `${granularity.clause[gRow.key] * 100}%`">
                                                     </div>
@@ -353,19 +359,25 @@
                                     <span class="text-[#007A5E] font-bold mt-0.5">→</span>
                                     <span>
                                         <strong>Higher Precision:</strong>
-                                        Clause-level segmentation achieves
+                                        Clause‑level segmentation achieves
                                         <span
                                             x-text="`${(granularity.clause.precisionAt3 * 100).toFixed(1)}% P@3`"></span>,
                                         compared to
                                         <span
                                             x-text="`${(granularity.document.precisionAt3 * 100).toFixed(1)}%`"></span>
-                                        for full documents
+                                        for full documents.
                                     </span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-[#007A5E] font-bold mt-0.5">→</span>
-                                    <span><strong>Reduced Noise:</strong> Smaller units mean less irrelevant content
-                                        diluting the match score</span>
+                                    <span>
+                                        <strong>More Actionable Results:</strong>
+                                        Clause‑level results average only
+                                        <span x-text="`${granularity.clause.avg_result_length.toFixed(1)}`"></span>
+                                        words, while full documents average over
+                                        <span x-text="`${granularity.document.avg_result_length.toFixed(1)}`"></span>
+                                        words – a <strong>300× reduction</strong> in reading burden.
+                                    </span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-[#007A5E] font-bold mt-0.5">→</span>
@@ -373,13 +385,13 @@
                                         <strong>Better Ranking:</strong>
                                         MRR of <span x-text="granularity.clause.mrr.toFixed(3)"></span>
                                         shows relevant clauses appear at position
-                                        ~<span x-text="(1 / granularity.clause.mrr).toFixed(1)"></span> on average
+                                        ~<span x-text="(1 / granularity.clause.mrr).toFixed(1)"></span> on average.
                                     </span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-[#007A5E] font-bold mt-0.5">→</span>
                                     <span><strong>Legal Specificity:</strong> Legal queries often target specific
-                                        clauses, not entire documents</span>
+                                        clauses, not entire documents.</span>
                                 </li>
                             </ul>
                         </div>
@@ -392,11 +404,12 @@
                                 <h5 class="font-bold text-[#CE1126] mb-2">Full Document</h5>
                                 <p class="text-sm text-gray-600">
                                     Searching entire legal documents leads to lower precision due to content dilution.
-                                    Long documents contain many topics, making exact matches harder.
+                                    Long documents contain many topics, making exact matches harder. Average length:
+                                    <span x-text="`${granularity.document.avg_result_length.toFixed(0)}`"></span> words.
                                 </p>
                             </div>
 
-                            <!-- Section/Article Level — orange -->
+                            <!-- Section/Article Level — yellow -->
                             <div class="p-5 bg-[#FCD116]/5 rounded-xl border border-[#FCD116]/20">
                                 <h5 class="font-bold text-[#FCD116] mb-2">Section/Article Level</h5>
                                 <p class="text-sm text-gray-600">
@@ -404,7 +417,8 @@
                                     Improvement of
                                     <span
                                         x-text="`${(((granularity.as.precisionAt3 - granularity.document.precisionAt3) / granularity.document.precisionAt3) * 100).toFixed(1)}%`"></span>
-                                    in P@3.
+                                    in P@3. Average length:
+                                    <span x-text="`${granularity.as.avg_result_length.toFixed(0)}`"></span> words.
                                 </p>
                             </div>
 
@@ -415,7 +429,8 @@
                                     Optimal granularity for legal search. Each unit is focused and specific, leading to
                                     <span
                                         x-text="`${(((granularity.clause.precisionAt3 - granularity.document.precisionAt3) / granularity.document.precisionAt3) * 100).toFixed(1)}%`"></span>
-                                    improvement over full documents.
+                                    improvement over full documents. Average length:
+                                    <span x-text="`${granularity.clause.avg_result_length.toFixed(0)}`"></span> words.
                                 </p>
                             </div>
                         </div>
