@@ -325,12 +325,37 @@ def search_single_language(
     return results 
 
 
+############################################
+# HELPER: Deduplicate and sort combined results
+############################################
 
+def _combine_and_sort(primary_results, secondary_results):
+    """
+    Merge primary and secondary result lists,
+    remove duplicates (keeping highest score),
+    and sort by final_score (or score).
+    Returns the sorted candidate pool.
+    """
+    candidate_pool = primary_results + secondary_results
 
+    unique_results = {}
+    for res in candidate_pool:
+        unit_id = res["unit_id"]
+        current_score = res.get("final_score", res.get("score", 0))
+        if unit_id not in unique_results:
+            unique_results[unit_id] = res
+        else:
+            existing_score = unique_results[unit_id].get("final_score", unique_results[unit_id].get("score", 0))
+            if current_score > existing_score:
+                unique_results[unit_id] = res
+
+    candidate_pool = list(unique_results.values())
+    candidate_pool.sort(key=lambda x: x.get("final_score", x["score"]), reverse=True)
+    return candidate_pool 
 
 ############################################
 # SEARCH
-############################################  
+############################################   
 
 def search(
     query,
@@ -342,92 +367,118 @@ def search(
     resources = load_resources(granularity)
     legal_dir = CONFIG[granularity]["legal_dir"]
 
-    # ==========================================
-    # STAGE 1 & 2: PRIMARY LANGUAGE RETRIEVAL
-    # ==========================================
-    expanded_query = expand_query(query)
-    processed_query = preprocess_query(expanded_query)
+    # ----------------------------------------------------------
+    # CASE 1: Query language is English or French
+    # ----------------------------------------------------------
+    if query_language in ["en", "fr"]:
+        # Primary search in detected language
+        expanded_query = expand_query(query)
+        processed_query = preprocess_query(expanded_query)
 
-    primary_results = search_single_language(
-        processed_query=processed_query,
-        expanded_query=expanded_query,
-        resources=resources[query_language],
-        legal_dir=legal_dir
-    )
+        primary_results = search_single_language(
+            processed_query=processed_query,
+            expanded_query=expanded_query,
+            resources=resources[query_language],
+            legal_dir=legal_dir
+        )
+        if use_rerank:
+            primary_results = rerank_results(primary_results, query=query)
+        primary_results = primary_results[:10]
 
-    if use_rerank:
-        primary_results = rerank_results(primary_results, query=query)
-
-    primary_results = primary_results[:10]
-
-    # ==========================================
-    # TRANSLATION STEP
-    # ==========================================
-    if query_language == "en":
-        translated_query = translate_text(text=query, source="en", target="fr")
-        secondary_language = "fr"
-    else:
-        translated_query = translate_text(text=query, source="fr", target="en")
-        secondary_language = "en"
-
-    # ==========================================
-    # STAGE 1 & 2: SECONDARY LANGUAGE RETRIEVAL
-    # ==========================================
-    expanded_query_secondary = expand_query(translated_query)
-    processed_query_secondary = preprocess_query(expanded_query_secondary)
-
-    secondary_results = search_single_language(
-        processed_query=processed_query_secondary,
-        expanded_query=expanded_query_secondary,
-        resources=resources[secondary_language],
-        legal_dir=legal_dir
-    )
-
-    if use_rerank:
-        secondary_results = rerank_results(secondary_results, query=translated_query)
-
-    secondary_results = secondary_results[:10]
-
-    # ==========================================
-    # ADD LANGUAGE LABELS (For UI/Tracking)
-    # ==========================================
-    for r in primary_results:
-        r["language"] = query_language
-    for r in secondary_results:
-        r["language"] = secondary_language
-
-    # ==========================================
-    # STAGE 3: CONSOLIDATED GLOBAL RERANK
-    # ==========================================
-    candidate_pool = primary_results + secondary_results
-
-    # --- NEW: Remove duplicates by unit_id, keeping the higher score ---
-    unique_results = {}
-    for res in candidate_pool:
-        unit_id = res["unit_id"]
-        # Use final_score if present (from rerank), otherwise fallback to score
-        current_score = res.get("final_score", res.get("score", 0))
-        if unit_id not in unique_results:
-            unique_results[unit_id] = res
+        # Translate to the other language
+        if query_language == "en":
+            translated_query = translate_text(text=query, source="en", target="fr")
+            secondary_language = "fr"
         else:
-            existing_score = unique_results[unit_id].get("final_score", unique_results[unit_id].get("score", 0))
-            if current_score > existing_score:
-                unique_results[unit_id] = res
+            translated_query = translate_text(text=query, source="fr", target="en")
+            secondary_language = "en"
 
-    candidate_pool = list(unique_results.values())
-    # --- End of deduplication ---
+        expanded_secondary = expand_query(translated_query)
+        processed_secondary = preprocess_query(expanded_secondary)
 
-    # Sort the combined pool by final legal score
-    candidate_pool.sort(key=lambda x: x.get("final_score", x["score"]), reverse=True)
-    final_results = candidate_pool[:top_k]
+        secondary_results = search_single_language(
+            processed_query=processed_secondary,
+            expanded_query=expanded_secondary,
+            resources=resources[secondary_language],
+            legal_dir=legal_dir
+        )
+        if use_rerank:
+            secondary_results = rerank_results(secondary_results, query=translated_query)
+        secondary_results = secondary_results[:10]
 
-    return {
-        "query_language": query_language,
-        "translated_query": translated_query,
-        "primary_results": primary_results,
-        "secondary_results": secondary_results,
-        "final_results": final_results
-    }
+        # Add language labels
+        for r in primary_results:
+            r["language"] = query_language
+        for r in secondary_results:
+            r["language"] = secondary_language
+
+        # Combine, deduplicate, sort
+        candidate_pool = _combine_and_sort(primary_results, secondary_results)
+        final_results = candidate_pool[:top_k]
+
+        return {
+            "query_language": query_language,
+            "translated_query": translated_query,
+            "primary_results": primary_results,
+            "secondary_results": secondary_results,
+            "final_results": final_results
+        }
+
+    # ----------------------------------------------------------
+    # CASE 2: Query language is NEITHER English nor French
+    # ----------------------------------------------------------
+    else:
+        # Translate query to English and French
+        eng_query = translate_text(text=query, source=query_language, target="en")
+        fr_query = translate_text(text=query, source=query_language, target="fr")
+
+        # --- Search in English index ---
+        expanded_eng = expand_query(eng_query)
+        processed_eng = preprocess_query(expanded_eng)
+
+        primary_results = search_single_language(
+            processed_query=processed_eng,
+            expanded_query=expanded_eng,
+            resources=resources["en"],
+            legal_dir=legal_dir
+        )
+        if use_rerank:
+            primary_results = rerank_results(primary_results, query=eng_query)
+        primary_results = primary_results[:10]
+
+        # --- Search in French index ---
+        expanded_fr = expand_query(fr_query)
+        processed_fr = preprocess_query(expanded_fr)
+
+        secondary_results = search_single_language(
+            processed_query=processed_fr,
+            expanded_query=expanded_fr,
+            resources=resources["fr"],
+            legal_dir=legal_dir
+        )
+        if use_rerank:
+            secondary_results = rerank_results(secondary_results, query=fr_query)
+        secondary_results = secondary_results[:10]
+
+        # Add language labels
+        for r in primary_results:
+            r["language"] = "en"
+        for r in secondary_results:
+            r["language"] = "fr"
+
+        # Combine, deduplicate, sort
+        candidate_pool = _combine_and_sort(primary_results, secondary_results)
+        final_results = candidate_pool[:top_k]
+
+        
+        return {
+            "query_language": query_language,
+            "translated_query": eng_query,       # or fr_query – choose one
+            "primary_results": primary_results,
+            "secondary_results": secondary_results,
+            "final_results": final_results
+        }  
+
 
 
 
