@@ -65,12 +65,12 @@ def get_pdf_mapping(pdf_dir):
 
 ############################################
 # TRANSLATION
-############################################      
+############################################     
 
 def detect_language(text: str) -> str:
     try:
-        lang = detect(text)
-        return "fr" if lang == "fr" else "en"
+        lang = detect(text)         
+        return lang
     except:
         return "en"  
 
