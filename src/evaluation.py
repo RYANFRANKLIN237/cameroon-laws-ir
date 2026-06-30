@@ -1,5 +1,6 @@
 import json
 import os
+from time import perf_counter
 from statistics import mean
 
 from src.tfidf_search import search
@@ -70,9 +71,25 @@ def avg_result_length(results):
     return round(mean(lengths), 1)    
 
 
+def latency_per_granularity(rows):
+    """Summarize latency rows by granularity and rerank setting."""
+    latency_rows = []
+    for row in rows:
+        latency_rows.append({
+            "granularity": row["granularity"],
+            "rerank": row["rerank"],
+            "avg_latency_seconds": row["avg_latency_seconds"],
+            "min_latency_seconds": row["min_latency_seconds"],
+            "max_latency_seconds": row["max_latency_seconds"],
+            "query_count": row["query_count"],
+        })
+
+    return latency_rows
 
 
-def evaluate(use_rerank=False, granularity="clause"):
+
+
+def evaluate(use_rerank=False, granularity="clause", verbose=True):
 
     ground_truth = load_ground_truth(granularity)
 
@@ -82,15 +99,19 @@ def evaluate(use_rerank=False, granularity="clause"):
     mrr_scores = []
     failed_count = 0
     length_scores = []
+    latency_scores = []
 
     for query, relevant_docs in ground_truth.items():
 
+        start_time = perf_counter()
         result_dict = search(
             query,
             top_k=20,
             use_rerank=use_rerank,
             granularity=granularity
         )
+        latency_scores.append(perf_counter() - start_time)
+
         final_results = result_dict["final_results"]
         retrieved_docs = [r["unit_id"] for r in final_results]
 
@@ -114,19 +135,25 @@ def evaluate(use_rerank=False, granularity="clause"):
         "recallAt10": round(mean(r10_scores), 3),
         "mrr": round(mean(mrr_scores), 3),
         "failures": failed_count,
-        "avg_result_length": round(mean(length_scores), 1) if length_scores else 0 
+        "avg_result_length": round(mean(length_scores), 1) if length_scores else 0,
+        "avg_latency_seconds": round(mean(latency_scores), 4) if latency_scores else 0,
+        "min_latency_seconds": round(min(latency_scores), 4) if latency_scores else 0,
+        "max_latency_seconds": round(max(latency_scores), 4) if latency_scores else 0,
+        "query_count": len(latency_scores),
     }
 
-    print("\n==============================")
-    print(f"Granularity: {granularity}")
-    print(f"Rerank: {use_rerank}")
-    print("==============================")
-    print(f"Hit@3:           {scores['hitAt3']:.3f}")
-    print(f"MRR:             {scores['mrr']:.3f}")
-    print(f"Precision@3:     {scores['precisionAt3']:.3f}")
-    print(f"Recall@10:       {scores['recallAt10']:.3f}")
-    print(f"Failures:        {scores['failures']}")
-    print(f"Avg. length:     {scores['avg_result_length']} words")
+    if verbose:
+        print("\n==============================")
+        print(f"Granularity: {granularity}")
+        print(f"Rerank: {use_rerank}")
+        print("==============================")
+        print(f"Hit@3:           {scores['hitAt3']:.3f}")
+        print(f"MRR:             {scores['mrr']:.3f}")
+        print(f"Precision@3:     {scores['precisionAt3']:.3f}")
+        print(f"Recall@10:       {scores['recallAt10']:.3f}")
+        print(f"Failures:        {scores['failures']}")
+        print(f"Avg. length:     {scores['avg_result_length']} words")
+        print(f"Avg. latency:    {scores['avg_latency_seconds']:.4f} seconds")
 
 
     return scores
@@ -136,7 +163,7 @@ def evaluate(use_rerank=False, granularity="clause"):
 # METRICS API
 ############################################
 
-def get_metrics(mode="clause") -> dict:
+def get_metrics(mode="clause", clause_ranked_scores=None) -> dict:
 
     # DEFAULT → clause baseline + rerank
     if mode == "clause":
@@ -152,7 +179,7 @@ def get_metrics(mode="clause") -> dict:
     # COMPARISON TABLE MODE
     elif mode == "all":
 
-        clause_scores = evaluate(use_rerank=True, granularity="clause")
+        clause_scores = clause_ranked_scores or evaluate(use_rerank=True, granularity="clause")
         as_scores = evaluate(use_rerank=True, granularity="as")
         document_scores = evaluate(use_rerank=True, granularity="document")
 

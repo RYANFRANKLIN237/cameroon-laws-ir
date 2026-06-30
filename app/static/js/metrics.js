@@ -1,4 +1,7 @@
 function metricsApp() {
+    const metricsCacheKey = 'metricsData';
+    const metricsCacheVersion = 'latency-shared-v2';
+
     return {
         isLoading: true,
 
@@ -28,23 +31,25 @@ function metricsApp() {
         async init() {
             lucide.createIcons();
 
-            // 1. Try to load from sessionStorage cache
-            const cached = sessionStorage.getItem('metricsData');
+            const cached = sessionStorage.getItem(metricsCacheKey);
             if (cached) {
                 try {
                     const data = JSON.parse(cached);
-                    this.applyMetricsData(data);
-                    return;
+                    if (data.__cacheVersion === metricsCacheVersion) {
+                        this.applyMetricsData(data);
+                        return;
+                    }
                 } catch (e) {
                     console.warn('Failed to parse cached metrics data', e);
                 }
+                sessionStorage.removeItem(metricsCacheKey);
             }
 
-            // 2. No cache or invalid – fetch from API
             try {
                 const res = await fetch('/api/metrics');
                 const data = await res.json();
-                sessionStorage.setItem('metricsData', JSON.stringify(data));
+                data.__cacheVersion = metricsCacheVersion;
+                sessionStorage.setItem(metricsCacheKey, JSON.stringify(data));
                 this.applyMetricsData(data);
             } catch (err) {
                 console.error('Failed to load metrics:', err);
@@ -62,6 +67,8 @@ function metricsApp() {
             data.granularity.document.failedQueries = data.systemData.failedQueries_document;
             this.granularity = data.granularity;
             this.systemData = data.systemData;
+            this.systemData.retrievalLatencySeconds =
+                data.systemData.retrievalLatencySeconds ?? data.ranked.avg_latency_seconds ?? 0;
 
             this.isLoading = false;
             this.$nextTick(() => {

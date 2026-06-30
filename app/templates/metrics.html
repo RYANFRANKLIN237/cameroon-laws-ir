@@ -441,7 +441,7 @@
                 <div style="animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.6s both; opacity:0;">
                     <h3 class="text-xl font-bold text-gray-900 mb-4">Retrieval System Data</h3>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
 
                         <!-- Legal Corpus -->
                         <div class="card-enter bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow"
@@ -493,6 +493,20 @@
                             <p class="text-sm text-gray-400">Failed queries from ground_truth.json</p>
                         </div>
 
+                        <!-- Latency -->
+                        <div class="card-enter bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow"
+                            style="animation-delay: 1.1s">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i data-lucide="timer" class="w-6 h-6 text-[#FCD116]"></i>
+                                <h4 class="font-semibold text-gray-900">Latency</h4>
+                            </div>
+                            <p class="text-3xl font-bold text-[#FCD116] mb-2">
+                                <span x-text="systemData.retrievalLatencySeconds.toFixed(4)"></span>
+                                <span class="text-base font-semibold text-gray-500">sec</span>
+                            </p>
+                            <p class="text-sm text-gray-400">Avg retrieval time for clause reranking</p>
+                        </div>
+
                     </div>
                 </div>
             </div><!-- end !isLoading -->
@@ -500,7 +514,7 @@
     </div><!-- end page wrapper -->
 
     <!-- ── ALPINE APP LOGIC ───────────────────────────────────────── -->
-    <script src="{{ url_for('static', filename='js/metrics.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/metrics.js') }}?v=latency-shared-v2"></script>
 
 </body>
 

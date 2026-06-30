@@ -6,7 +6,7 @@ Data inspection script for Cameroon legal corpus.
 import os
 import sys
 from langdetect import detect, DetectorFactory
-from src.evaluation import evaluate
+from src.evaluation import evaluate, latency_per_granularity
 
 # Ensure deterministic language detection (optional but good practice)
 DetectorFactory.seed = 0
@@ -95,7 +95,11 @@ def print_evaluation_table():
                 "Hit@3": scores["hitAt3"],
                 "R@10": scores["recallAt10"],
                 "MRR": scores["mrr"],
-                "AvgLen": scores["avg_result_length"]
+                "AvgLen": scores["avg_result_length"],
+                "avg_latency_seconds": scores["avg_latency_seconds"],
+                "min_latency_seconds": scores["min_latency_seconds"],
+                "max_latency_seconds": scores["max_latency_seconds"],
+                "query_count": scores["query_count"],
             })
 
     # ── Print table ──────────────────────────────────────────────
@@ -137,6 +141,72 @@ def print_evaluation_table():
         print(line)
 
     print("\n" + "=" * 60)
+    print_latency_table(rows)
+
+
+def get_latency_rows():
+    """Run quiet evaluations and collect latency for all granularities."""
+    rows = []
+    granularities = ["document", "as", "clause"]
+    rerank_values = [False, True]
+
+    for gran in granularities:
+        for rerank in rerank_values:
+            scores = evaluate(use_rerank=rerank, granularity=gran, verbose=False)
+            rows.append({
+                "granularity": gran,
+                "rerank": "With" if rerank else "Without",
+                "avg_latency_seconds": scores["avg_latency_seconds"],
+                "min_latency_seconds": scores["min_latency_seconds"],
+                "max_latency_seconds": scores["max_latency_seconds"],
+                "query_count": scores["query_count"],
+            })
+
+    return rows
+
+
+def print_latency_table(evaluation_rows=None):
+    """Print average search latency per granularity in seconds."""
+    if evaluation_rows is None:
+        evaluation_rows = get_latency_rows()
+
+    rows = latency_per_granularity(evaluation_rows)
+
+    print("\n" + "=" * 72)
+    print("                  LATENCY PER GRANULARITY")
+    print("=" * 72)
+
+    header = ["Granularity", "Re-ranking", "Queries", "Avg sec", "Min sec", "Max sec"]
+    widths = {
+        "Granularity": 12,
+        "Re-ranking": 12,
+        "Queries": 7,
+        "Avg sec": 10,
+        "Min sec": 10,
+        "Max sec": 10,
+    }
+
+    line = "|"
+    for col in header:
+        line += f" {col.ljust(widths[col])} |"
+    print(line)
+
+    sep = "|"
+    for col in header:
+        sep += "-" + "-" * widths[col] + "-|"
+    print(sep)
+
+    for row in rows:
+        line = "|"
+        line += f" {row['granularity'].ljust(widths['Granularity'])} |"
+        line += f" {row['rerank'].ljust(widths['Re-ranking'])} |"
+        line += f" {row['query_count']:>{widths['Queries']}} |"
+        line += f" {row['avg_latency_seconds']:>{widths['Avg sec']}.4f} |"
+        line += f" {row['min_latency_seconds']:>{widths['Min sec']}.4f} |"
+        line += f" {row['max_latency_seconds']:>{widths['Max sec']}.4f} |"
+        print(line)
+
+    print("\n" + "=" * 72)
 
 
 def main():
@@ -148,7 +218,7 @@ def main():
 
     # # 2. Print language table for extracted_text
     # print_language_table()
-    print_evaluation_table()
+    print_latency_table()
 
 
 if __name__ == "__main__":
