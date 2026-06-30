@@ -8,6 +8,7 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 # Cache for translations (could be moved to a dedicated module)
 translation_cache = {}
+metrics_cache = None
 
 
 @api_bp.route('/search')
@@ -83,8 +84,18 @@ def translate_text():
 
 @api_bp.route('/metrics')
 def metrics():
+    global metrics_cache
+
+    if metrics_cache is not None and request.args.get("refresh") != "1":
+        response = jsonify(metrics_cache)
+        response.headers["Cache-Control"] = "private, max-age=3600"
+        return response
+
     clause_metrics = get_metrics(mode="clause")          # {baseline, ranked}
-    granularity_metrics = get_metrics(mode="all")        # {clause, as, document}
+    granularity_metrics = get_metrics(
+        mode="all",
+        clause_ranked_scores=clause_metrics["ranked"]
+    )                                                    # {clause, as, document}
 
     static_data = get_system_data()
 
@@ -101,9 +112,10 @@ def metrics():
         "failedQueries": clause_failures,
         "failedQueries_as": as_failures,
         "failedQueries_document": document_failures,
+        "retrievalLatencySeconds": granularity_metrics["clause"]["avg_latency_seconds"],
     }
 
-    return jsonify({
+    metrics_payload = {
         "baseline": clause_metrics["baseline"],
         "ranked": clause_metrics["ranked"],
         "granularity": {
@@ -112,4 +124,10 @@ def metrics():
             "clause": granularity_metrics["clause"],
         },
         "systemData": system_data,
-    })
+    }
+    metrics_cache = metrics_payload
+
+    response = jsonify(metrics_payload)
+    response.headers["Cache-Control"] = "private, max-age=3600"
+
+    return response
