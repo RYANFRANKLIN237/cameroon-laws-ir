@@ -8,7 +8,6 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 # Cache for translations (could be moved to a dedicated module)
 translation_cache = {}
-metrics_cache = None
 
 
 @api_bp.route('/search')
@@ -84,13 +83,6 @@ def translate_text():
 
 @api_bp.route('/metrics')
 def metrics():
-    global metrics_cache
-
-    if metrics_cache is not None and request.args.get("refresh") != "1":
-        response = jsonify(metrics_cache)
-        response.headers["Cache-Control"] = "private, max-age=3600"
-        return response
-
     clause_metrics = get_metrics(mode="clause")          # {baseline, ranked}
     granularity_metrics = get_metrics(
         mode="all",
@@ -125,9 +117,7 @@ def metrics():
         },
         "systemData": system_data,
     }
-    metrics_cache = metrics_payload
-
     response = jsonify(metrics_payload)
-    response.headers["Cache-Control"] = "private, max-age=3600"
+    response.headers["Cache-Control"] = "no-store"
 
     return response

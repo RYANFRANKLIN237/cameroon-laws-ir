@@ -9,7 +9,15 @@ from transformers import pipeline
 
 load_dotenv()
 DetectorFactory.seed = 0
-translate_client = translate.Client()
+
+# Lazy initialization of translate client (only when needed)
+_translate_client = None
+
+def get_translate_client():
+    global _translate_client
+    if _translate_client is None:
+        _translate_client = translate.Client()
+    return _translate_client
 
 translation_cache = {}
 
@@ -85,7 +93,8 @@ def translate_text(text, source, target):
     if key in translation_cache:
         return translation_cache[key]
 
-    result = translate_client.translate(
+    client = get_translate_client()
+    result = client.translate(
         text,
         source_language=source,
         target_language=target

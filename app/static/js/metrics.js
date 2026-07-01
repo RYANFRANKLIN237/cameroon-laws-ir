@@ -1,6 +1,6 @@
 function metricsApp() {
     const metricsCacheKey = 'metricsData';
-    const metricsCacheVersion = 'latency-shared-v2';
+    const metricsCacheVersion = 'session-only-v3';
 
     return {
         isLoading: true,
@@ -46,7 +46,7 @@ function metricsApp() {
             }
 
             try {
-                const res = await fetch('/api/metrics');
+                const res = await fetch('/api/metrics', { cache: 'no-store' });
                 const data = await res.json();
                 data.__cacheVersion = metricsCacheVersion;
                 sessionStorage.setItem(metricsCacheKey, JSON.stringify(data));
