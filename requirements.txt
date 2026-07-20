@@ -109,6 +109,7 @@ py_rust_stemmers==0.1.5
 pyarrow==24.0.0
 pyasn1==0.6.3
 pyasn1_modules==0.4.2
+pycountry==26.2.16
 pycparser==2.23
 pydantic==2.12.5
 pydantic_core==2.41.5

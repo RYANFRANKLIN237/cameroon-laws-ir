@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Onboarding - Cameroon Legal Search</title>
+    <title>Welcome — LexAfrique</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -36,30 +36,28 @@
     </style>
 </head>
 
-<body class="bg-white min-h-screen flex items-center justify-center font-sans overflow-hidden"
-      x-data="{ 
-          currentSlide: 0, 
+<body class="min-h-screen flex flex-col items-center justify-center font-sans overflow-hidden
+             bg-gradient-to-br from-[#007A5E]/10 via-white to-[#CE1126]/10 p-8"
+      x-data="{
+          currentSlide: 0,
           slides: [
               {
                   icon: 'scale',
                   colorClass: 'text-primary',
-                  dotClass: 'bg-primary',
-                  title: 'Welcome to Cameroon Legal Search',
-                  desc: 'Your comprehensive search engine for Cameroon\'s constitution and laws. Access legal information quickly and efficiently.'
+                  title: 'Welcome to LexAfrique',
+                  desc: 'Your intelligent legal search platform for African law. Access thousands of authentic legal texts — constitutions, codes, statutes, and decrees — sourced directly from official authorities.'
               },
               {
                   icon: 'search',
                   colorClass: 'text-accent',
-                  dotClass: 'bg-accent',
-                  title: 'Smart Information Retrieval',
-                  desc: 'Enter your query and get ranked results from Cameroon\'s legal corpus. Our system uses advanced algorithms to find the most relevant legal texts.'
+                  title: 'Precision Legal Search',
+                  desc: 'Ask in plain language and get ranked results from a verified legal corpus. Our retrieval engine surfaces the most relevant clauses, articles, and provisions — fast.'
               },
               {
-                  icon: 'languages',
+                  icon: 'globe',
                   colorClass: 'text-secondary',
-                  dotClass: 'bg-secondary',
-                  title: 'Bilingual Support',
-                  desc: 'Since Cameroon is bilingual, results may appear in English or French. Use the translate button on any result to switch languages.'
+                  title: 'Multilingual & Verified',
+                  desc: 'Search and read legal texts in English or French. Every document in LexAfrique is sourced from official publishers — verify any document\u2019s authenticity with a single upload.'
               }
           ],
           init() {
@@ -75,57 +73,70 @@
           }
       }">
 
-    <div class="max-w-2xl w-full p-8 text-center">
-        
-        <div class="flex justify-center gap-2 mb-12">
-            <div class="h-2.5 w-16 bg-primary rounded-full"></div>
-            <div class="h-2.5 w-16 bg-accent rounded-full"></div>
-            <div class="h-2.5 w-16 bg-secondary rounded-full"></div>
+    <!-- Brand wordmark -->
+    <div class="mb-12 flex flex-col items-center gap-3">
+        <div class="flex items-center gap-3">
+            <i data-lucide="scale" class="w-7 h-7 text-primary"></i>
+            <span class="text-3xl font-bold tracking-tight text-gray-900">
+                Lex<span class="text-primary">Afrique</span>
+            </span>
         </div>
+        <div class="flex gap-1.5">
+            <div class="h-1 w-16 bg-primary rounded-full"></div>
+            <div class="h-1 w-16 bg-accent rounded-full"></div>
+            <div class="h-1 w-16 bg-secondary rounded-full"></div>
+        </div>
+    </div>
 
-        <div class="relative min-h-[340px] flex items-center justify-center">
-            <template x-for="(slide, index) in slides" :key="index">
-                <div x-show="currentSlide === index"
-                     x-transition:enter="slide-transition"
-                     x-transition:enter-start="opacity-0 transform translate-x-12"
-                     x-transition:enter-end="opacity-100 transform translate-x-0"
-                     x-transition:leave="transition duration-300 absolute"
-                     x-transition:leave-start="opacity-100"
-                     x-transition:leave-end="opacity-0 transform -translate-x-12"
-                     class="w-full">
-                    
-                    <div class="flex justify-center mb-10">
-                         <i :data-lucide="slide.icon" 
-                            class="w-24 h-24"
-                            :class="slide.colorClass"></i>
-                    </div>
-                    
-                    <h1 class="text-4xl font-bold text-gray-900 mb-6 tracking-tight" x-text="slide.title"></h1>
-                    <p class="text-xl text-gray-500 leading-relaxed px-4" x-text="slide.desc"></p>
+    <!-- Slide content -->
+    <div class="relative min-h-[340px] flex items-center justify-center w-full max-w-2xl">
+        <template x-for="(slide, index) in slides" :key="index">
+            <div x-show="currentSlide === index"
+                 x-transition:enter="slide-transition"
+                 x-transition:enter-start="opacity-0 transform translate-x-12"
+                 x-transition:enter-end="opacity-100 transform translate-x-0"
+                 x-transition:leave="transition duration-300 absolute"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 transform -translate-x-12"
+                 class="w-full text-center">
+
+                <div class="flex justify-center mb-8">
+                    <i :data-lucide="slide.icon"
+                       class="w-24 h-24"
+                       :class="slide.colorClass"></i>
                 </div>
-            </template>
-        </div>
 
-        <div class="flex justify-center gap-3 mt-10 mb-12">
-            <template x-for="(slide, index) in slides">
-                <button @click="currentSlide = index; $nextTick(() => { lucide.createIcons(); });"
-                        :class="index === currentSlide ? slide.dotClass + ' w-12' : 'bg-gray-200 w-3'" 
-                        class="h-3 rounded-full transition-all duration-500 ease-in-out"></button>
-            </template>
-        </div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-6 tracking-tight" x-text="slide.title"></h1>
+                <p class="text-xl text-gray-500 leading-relaxed px-4" x-text="slide.desc"></p>
+            </div>
+        </template>
+    </div>
 
-        <div class="flex justify-center gap-6">
-            <button @click="window.location.href = '/search'" 
-                    class="px-10 py-3.5 text-gray-500 font-bold rounded-xl transition-all duration-300 hover:bg-accent hover:text-white active:scale-95">
-                Skip
-            </button>
-            
-            <button @click="next()" 
-                    class="group flex items-center justify-center gap-2 px-10 py-3.5 bg-primary text-white font-bold rounded-xl shadow-lg hover:brightness-110 transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95">
-                <span x-text="currentSlide < slides.length - 1 ? 'Next' : 'Get Started'"></span>
-                <i data-lucide="chevron-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
-            </button>
-        </div>
+    <!-- Progress dots -->
+    <div class="flex justify-center gap-3 mt-10 mb-12">
+        <template x-for="(slide, index) in slides">
+            <button @click="currentSlide = index; $nextTick(() => { lucide.createIcons(); });"
+                    :class="index === currentSlide ? 'bg-primary w-12' : 'bg-gray-300 w-3'"
+                    class="h-3 rounded-full transition-all duration-500 ease-in-out"></button>
+        </template>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex justify-center gap-6">
+        <button @click="window.location.href = '/search'"
+                class="px-10 py-3.5 text-gray-500 font-bold rounded-xl transition-all duration-300
+                       hover:bg-gray-100 active:scale-95">
+            Skip
+        </button>
+
+        <button @click="next()"
+                class="group flex items-center justify-center gap-2 px-10 py-3.5 bg-primary text-white
+                       font-bold rounded-xl shadow-lg hover:brightness-110 transform hover:-translate-y-0.5
+                       transition-all duration-300 active:scale-95">
+            <span x-text="currentSlide < slides.length - 1 ? 'Next' : 'Get Started'"></span>
+            <i data-lucide="chevron-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"
+               x-show="currentSlide < slides.length - 1"></i>
+        </button>
     </div>
 
 </body>
