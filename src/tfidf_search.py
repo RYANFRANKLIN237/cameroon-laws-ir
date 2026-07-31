@@ -9,6 +9,8 @@ from scipy.sparse import load_npz
 from sklearn.metrics.pairwise import cosine_similarity
 from fastembed import TextEmbedding
 
+from src.citation_lookup import lookup_citation
+from src.citation_parser import parse_citation
 from src.legal_reranker import rerank_results
 from src.preprocessing import preprocess_text
 from src.utils import detect_language, translate_text, CONFIG
@@ -363,6 +365,29 @@ def search(
     use_rerank=True,
     granularity="clause"
 ):
+    # ----------------------------------------------------------
+    # CITATION GATE (conservative): only when parse is confident
+    # and lookup finds units. Otherwise concept search is unchanged.
+    # ----------------------------------------------------------
+    citation = parse_citation(query)
+    if citation:
+        citation_hits = lookup_citation(
+            citation,
+            granularity=granularity,
+            top_k=top_k,
+        )
+        if citation_hits:
+            query_language = detect_language(query)
+            return {
+                "query_language": query_language,
+                "translated_query": "",
+                "primary_results": citation_hits,
+                "secondary_results": [],
+                "final_results": citation_hits[:top_k],
+                "search_mode": "citation",
+                "citation": citation,
+            }
+
     query_language = detect_language(query)
     resources = load_resources(granularity)
     legal_dir = CONFIG[granularity]["legal_dir"]
@@ -421,7 +446,8 @@ def search(
             "translated_query": translated_query,
             "primary_results": primary_results,
             "secondary_results": secondary_results,
-            "final_results": final_results
+            "final_results": final_results,
+            "search_mode": "concept",
         }
 
     # ----------------------------------------------------------
@@ -476,7 +502,8 @@ def search(
             "translated_query": eng_query,       # or fr_query – choose one
             "primary_results": primary_results,
             "secondary_results": secondary_results,
-            "final_results": final_results
+            "final_results": final_results,
+            "search_mode": "concept",
         }  
 
 

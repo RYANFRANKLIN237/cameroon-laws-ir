@@ -239,3 +239,9 @@ def serve_legal_pdf(source_name):
         "error": "PDF not found",
         "details": f"Could not match '{source_name}' to any file in storage."
     }), 404
+
+
+@views_bp.route('/viewer')
+def pdf_viewer():
+    """PDF.js viewer: ?source=&page=&q= for page jump + text highlight."""
+    return render_template('viewer.html')

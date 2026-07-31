@@ -5,6 +5,8 @@ import nltk
 from tqdm import tqdm
 import shutil
 
+from src.page_utils import strip_page_markers
+
 # NLTK data is assumed to be pre-installed
 # Note: Run python -c "
 # import ssl
@@ -28,6 +30,7 @@ PROCESSED_DIR_FULL = os.path.join("data", "processed_unit_full")
 
 
 def preprocess_text(text):
+    text = strip_page_markers(text)
     text = text.lower()
     
     # Keep hyphens, parentheses for legal citations, and accented chars for French

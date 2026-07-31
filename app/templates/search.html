@@ -231,7 +231,7 @@
                             <i data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i>
                             <span x-text="`Source: ${truncateSource(result.source)}`"></span>
                             <span class="mx-1">•</span>
-                            <a :href="`/view-pdf/${result.source}#search=&quot;${encodeURIComponent(result.title)}&quot;`"
+                            <a :href="`/viewer?source=${encodeURIComponent(result.source)}&page=${result.page_start || 1}&q=${encodeURIComponent(result.highlight_quote || result.highlight || '')}`"
                                 target="_blank"
                                 class="flex items-center gap-1 text-[#007A5E] font-semibold hover:underline cursor-pointer">
                                 <i data-lucide="file-text" class="w-4 h-4"></i>
