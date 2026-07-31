@@ -41,7 +41,7 @@ def search():
 
    
     display_results = [
-        transform_result(raw, rank=i + 1, query=query)
+        transform_result(raw, rank=i + 1, query=query, granularity="clause")
         for i, raw in enumerate(final_results)
     ]
     
@@ -50,7 +50,9 @@ def search():
         "results": display_results,
         "total": len(display_results),
         "query": query,
-        "translated_query": translated_query 
+        "translated_query": translated_query,
+        "search_mode": search_payload.get("search_mode", "concept"),
+        "citation": search_payload.get("citation"),
     })
 
 @api_bp.route('/translate', methods=['POST'])

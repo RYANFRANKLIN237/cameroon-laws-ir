@@ -1,12 +1,22 @@
 """
 Legal unit splitter for Cameroon laws.
-Splits extracted text into individual articles/sections.
+Splits extracted text into individual articles/sections (and clauses),
+preserving PDF page spans in sidecar metadata.
 """
 import os
 import re
 import sys
 from tqdm import tqdm
 import shutil
+
+from src.page_utils import (
+    make_highlight_quote,
+    meta_path_for,
+    page_span_for_range,
+    source_pdf_from_stem,
+    strip_page_markers,
+    write_jsonl,
+)
 
 TEXT_DIR = os.path.join("data", "extracted_text")
 
@@ -65,9 +75,16 @@ def split_into_clauses(unit_text):
 
         clause_text = unit_text[start:end].strip()
 
-        clauses.append((clause_id, clause_text))
+        clauses.append((clause_id, clause_text, start, end))
 
     return clauses
+
+
+def safe_unit_id_from(unit_id: str) -> str:
+    safe_unit_id = re.sub(r"\s+", "_", unit_id.lower())
+    safe_unit_id = re.sub(r"_\(\d+\)", "", safe_unit_id)
+    safe_unit_id = re.sub(r"(section|article)_", "", safe_unit_id)
+    return safe_unit_id
 
 
 def process_documents(granularity):
@@ -86,6 +103,8 @@ def process_documents(granularity):
     if not txt_files:
         print("No extracted text files found.")
         return
+
+    metadata_by_id = {}
 
     for txt_file in tqdm(txt_files, desc=f"Splitting ({granularity})"):
 
@@ -110,18 +129,30 @@ def process_documents(granularity):
                 len(text)
             )
 
-            unit_text = text[unit_start:next_unit_start].strip()
+            unit_text = text[unit_start:next_unit_start]
+            safe_unit_id = safe_unit_id_from(unit["id"])
 
-            safe_unit_id = re.sub(r"\s+", "_", unit["id"].lower())
-            safe_unit_id = re.sub(r"_\(\d+\)", "", safe_unit_id)
-            safe_unit_id = re.sub(r"(section|article)_", "", safe_unit_id)
-
-            # CLAUSE MODE (unchanged behavior)
+            # CLAUSE MODE
             if granularity == "clause":
 
-                clauses = split_into_clauses(unit_text)
+                clause_parts = split_into_clauses(unit_text)
 
-                for clause_id, clause_text in clauses:
+                for clause_part in clause_parts:
+                    if len(clause_part) == 4:
+                        clause_id, clause_text, rel_start, rel_end = clause_part
+                        abs_start = unit_start + rel_start
+                        abs_end = unit_start + rel_end
+                    else:
+                        clause_id, clause_text = clause_part
+                        abs_start, abs_end = unit_start, next_unit_start
+
+                    clean_text = strip_page_markers(clause_text).strip()
+                    if not clean_text:
+                        continue
+
+                    page_start, page_end = page_span_for_range(
+                        text, abs_start, abs_end
+                    )
 
                     filename = (
                         f"{base_name}_"
@@ -133,10 +164,26 @@ def process_documents(granularity):
                     output_path = os.path.join(output_dir, filename)
 
                     with open(output_path, "w", encoding="utf-8") as f:
-                        f.write(clause_text)
+                        f.write(clean_text)
+
+                    metadata_by_id[filename] = {
+                        "unit_id": filename,
+                        "source_pdf": source_pdf_from_stem(base_name),
+                        "page_start": page_start,
+                        "page_end": page_end,
+                        "highlight_quote": make_highlight_quote(clean_text),
+                    }
 
             # ARTICLE / SECTION MODE
             else:
+
+                clean_text = strip_page_markers(unit_text).strip()
+                if not clean_text:
+                    continue
+
+                page_start, page_end = page_span_for_range(
+                    text, unit_start, next_unit_start
+                )
 
                 filename = (
                     f"{base_name}_"
@@ -147,9 +194,23 @@ def process_documents(granularity):
                 output_path = os.path.join(output_dir, filename)
 
                 with open(output_path, "w", encoding="utf-8") as f:
-                    f.write(unit_text)
+                    f.write(clean_text)
 
-    print(f"\n{granularity.upper()} level splitting completed.")
+                metadata_by_id[filename] = {
+                    "unit_id": filename,
+                    "source_pdf": source_pdf_from_stem(base_name),
+                    "page_start": page_start,
+                    "page_end": page_end,
+                    "highlight_quote": make_highlight_quote(clean_text),
+                }
+
+    metadata_records = list(metadata_by_id.values())
+    write_jsonl(meta_path_for(granularity), metadata_records)
+    print(
+        f"\n{granularity.upper()} level splitting completed "
+        f"({len(metadata_records)} units, "
+        f"metadata → {meta_path_for(granularity)})."
+    )
 
 
 if __name__ == "__main__":

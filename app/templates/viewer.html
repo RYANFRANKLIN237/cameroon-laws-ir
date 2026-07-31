@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer — LexAfrique</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/viewer.css') }}">
+</head>
+<body>
+    <div id="toolbar">
+        <div class="title" id="docTitle">Loading…</div>
+        <button type="button" id="prevPage" disabled>Prev</button>
+        <span id="pageInfo">—</span>
+        <button type="button" id="nextPage" disabled>Next</button>
+        <button type="button" id="findAgain">Highlight</button>
+        <span id="status"></span>
+        <a class="btn" id="openRaw" href="#" target="_blank" rel="noopener">Open raw PDF</a>
+    </div>
+    <div id="viewerContainer">
+        <div id="viewer">
+            <canvas id="pdfCanvas"></canvas>
+            <canvas id="highlightCanvas"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+</body>
+</html>

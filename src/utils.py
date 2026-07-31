@@ -6,9 +6,14 @@ from dotenv import load_dotenv
 from google.cloud import translate_v2 as translate
 from transformers import pipeline
 
+from src.page_utils import load_unit_metadata, strip_page_markers
+
 
 load_dotenv()
 DetectorFactory.seed = 0
+
+# Cache: granularity -> {unit_id: metadata}
+_UNIT_METADATA_CACHE = {}
 
 # Lazy initialization of translate client (only when needed)
 _translate_client = None
@@ -169,7 +174,13 @@ def parse_unit_id(unit_id: str) -> dict:
 
     return {"source": source, "title": title}  
     
-def transform_result(raw: dict, rank: int,query: str) -> dict:
+def get_unit_metadata_lookup(granularity: str = "clause") -> dict:
+    if granularity not in _UNIT_METADATA_CACHE:
+        _UNIT_METADATA_CACHE[granularity] = load_unit_metadata(granularity)
+    return _UNIT_METADATA_CACHE[granularity]
+
+
+def transform_result(raw: dict, rank: int, query: str, granularity: str = "clause") -> dict:
     """
     Converts a raw result from tfidf_search.search() into the display
     format expected by the UI.
@@ -177,16 +188,25 @@ def transform_result(raw: dict, rank: int,query: str) -> dict:
     raw dict keys: unit_id, score, text, (optionally) final_score, law_type, unit_type
     """
     parsed = parse_unit_id(raw["unit_id"])
-    text = raw["text"].strip()
+    text = strip_page_markers(raw["text"]).strip()
     lang = detect_language(text[:300])
     highlight = extract_answer(query, text)
+
+    meta = get_unit_metadata_lookup(granularity).get(raw["unit_id"], {})
+    page_start = meta.get("page_start")
+    page_end = meta.get("page_end")
+    highlight_quote = (
+        raw.get("citation_highlight_quote")
+        or meta.get("highlight_quote")
+        or (" ".join(text.split())[:100] if text else "")
+    )
 
     return {
         "id":          rank,
         "rank":        rank,
         "title":       parsed["title"],
         "content":     text,
-        "highlight":   highlight,
+        "highlight":   highlight or (raw.get("citation_highlight_quote") or ""),
         "source":      parsed["source"],
         "language":    lang,
         "translation": "",
@@ -194,8 +214,13 @@ def transform_result(raw: dict, rank: int,query: str) -> dict:
         "tfidf_score":   round(raw.get("score", 0), 4),
         "rerank_score":  round(raw.get("final_score", 0), 4),
         "law_type":      raw.get("law_type", ""),
-        "unit_type":     raw.get("unit_type", "")
-    }          
+        "unit_type":     raw.get("unit_type", ""),
+        "page_start":    page_start if page_start is not None else 1,
+        "page_end":      page_end if page_end is not None else page_start or 1,
+        "highlight_quote": highlight_quote,
+        "source_pdf":    meta.get("source_pdf", ""),
+        "citation_match": raw.get("citation_match", ""),
+    }
 
 
 
