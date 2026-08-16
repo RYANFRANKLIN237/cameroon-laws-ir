@@ -1,0 +1,57 @@
+[x-cloak] {
+    display: none !important;
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(60px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.page-enter {
+    animation: slideInFromRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.template-card {
+    animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    opacity: 0;
+}
+
+.template-card:hover {
+    transform: translateY(-2px);
+}
+
+.star-popular {
+    color: #FCD116;
+    fill: #FCD116;
+}
+
+.drafting-search:focus {
+    outline: none !important;
+}
+
+.category-scroll {
+    scrollbar-width: none;
+}
+
+.category-scroll::-webkit-scrollbar {
+    display: none;
+}

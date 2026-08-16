@@ -229,6 +229,14 @@ def search_home():
 def metrics():
     return render_template('metrics.html')
 
+@views_bp.route('/assistant')
+def assistant():
+    return render_template('assistant.html')
+
+@views_bp.route('/drafting')
+def drafting():
+    return render_template('drafting.html')
+
 @views_bp.route('/view-pdf/<path:source_name>')
 def serve_legal_pdf(source_name):
     norm_request = normalize_filename(source_name)
