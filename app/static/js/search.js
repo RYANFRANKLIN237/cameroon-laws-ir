@@ -1,3 +1,13 @@
+function loadAppLanguages() {
+    const el = document.getElementById('app-languages');
+    if (!el) return [];
+    try {
+        return JSON.parse(el.textContent);
+    } catch {
+        return [];
+    }
+}
+
 function searchApp() {
     return {
         // ── State ──────────────────────────────────────────
@@ -10,10 +20,9 @@ function searchApp() {
         translatedIds: new Set(),
 
         loaded: false,
-        showSidebar: false,
 
         // Language picker
-        languages: window.APP_LANGUAGES || [],
+        languages: loadAppLanguages(),
         showLangPicker: false,
         langSearch: '',
         selectedLang: { code: 'EN', name: 'English', flag: '🇬🇧', country: 'GB' },
@@ -24,26 +33,7 @@ function searchApp() {
             { label: 'Judicial System', color: 'bg-[#FFFDE7] text-[#F9A825] hover:bg-[#FFF9C4]', value: 'judiciary' },
         ],
 
-        sidebarFeatures: [
-            {
-                icon: 'bot',
-                label: 'Legal AI Assistant',
-                description: 'Chat with an AI trained on African legal corpora',
-                action: 'ai',
-            },
-            {
-                icon: 'file-check',
-                label: 'Legal Document Verification',
-                description: 'Verify the authenticity and validity of legal documents',
-                action: 'verify',
-            },
-            {
-                icon: 'shield-alert',
-                label: 'Legal Misinformation Checker',
-                description: 'Detect and fact-check misleading legal claims',
-                action: 'misinfo',
-            },
-        ],
+        ...createSidebarState(),
 
         get filteredLanguages() {
             const q = this.langSearch.trim().toLowerCase();
@@ -70,11 +60,7 @@ function searchApp() {
                 }
             });
 
-            this.$watch('showSidebar', (open) => {
-                if (open) {
-                    this.$nextTick(() => lucide.createIcons());
-                }
-            });
+            this.initSidebar();
         },
 
         selectLanguage(lang) {
@@ -89,14 +75,6 @@ function searchApp() {
             });
         },
 
-        handleSidebarFeature(action) {
-            this.showSidebar = false;
-            // Feature screens wired up later
-            if (action === 'verify' || action === 'ai' || action === 'misinfo') {
-                return;
-            }
-        },
-
         truncateSource(source) {
             if (!source) return '';
             if (source.length <= 75) return source;
@@ -108,8 +86,10 @@ function searchApp() {
             if (!this.query.trim()) return;
 
             this.isLoading = true;
+            this.hasSearched = true;
             this.lastQuery = this.query;
             this.translatedIds = new Set();
+            this.$nextTick(() => lucide.createIcons());
 
             const startTime = performance.now();
 
@@ -121,12 +101,10 @@ function searchApp() {
                 this.searchTime = ((endTime - startTime) / 1000).toFixed(3);
 
                 this.results = data.results;
-                this.hasSearched = true;
 
             } catch (err) {
                 console.error('Search failed:', err);
                 this.results = [];
-                this.hasSearched = true;
             } finally {
                 this.isLoading = false;
                 this.$nextTick(() => lucide.createIcons());

@@ -69,13 +69,32 @@ INLINE_CLAUSE_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Explicit sub/clause/alinéa/paragraph markers
+# Explicit subdivision markers. "sub" is treated as clause/paragraph.
+# EN: sub, subsection, clause, paragraph, para.
+# FR: sous-section, sous-alinéa, clause, paragraphe, alinéa, al.
 CLAUSE_RE = re.compile(
-    r"\b(?:"
-    r"sub(?:section)?|clause|alin[eé]a|paragraph|para\.?"
-    r")\s*"
-    r"(?:\(?\s*([a-z]{1,4}|\d+|iii|ii|iv|ix|vi{0,3}|i{1,3})\s*\)?)",
-    re.IGNORECASE,
+    r"""
+    (?:
+        \b(?:
+            sous[\s-]+sections?
+            | sous[\s-]+alin[eé]as?
+            | sub(?:[\s-]*sections?)?
+            | paragraphes?
+            | paragraphs?
+            | clauses?
+            | alin[eé]as?
+        )\b
+        |
+        \b(?:paragr|para|al)\.
+        |
+        \b(?:paragr|para)\b
+    )
+    \s*
+    [\(\[]?\s*
+    ([a-z]{1,4}|\d+|iii|ii|iv|ix|vi{0,3}|i{1,3})
+    \s*[\)\]]?
+    """,
+    re.IGNORECASE | re.VERBOSE,
 )
 
 
@@ -114,6 +133,18 @@ def _normalize_clause_id(raw: Optional[str]) -> Optional[str]:
     if value.isdigit():
         return str(int(value))
     return value
+
+
+def _detect_clause_id(query: str) -> Optional[str]:
+    inline = INLINE_CLAUSE_RE.search(query)
+    if inline:
+        return _normalize_clause_id(inline.group(1))
+
+    for text in (query, normalize_text(query)):
+        clause_match = CLAUSE_RE.search(text)
+        if clause_match:
+            return _normalize_clause_id(clause_match.group(1))
+    return None
 
 
 def _detect_unit_type(query: str) -> Optional[str]:
@@ -158,15 +189,7 @@ def parse_citation(query: str) -> Optional[dict]:
 
     unit_type = _detect_unit_type(query) or "section"
     unit_number = _normalize_unit_number(unit_match.group(1))
-
-    clause_id = None
-    inline = INLINE_CLAUSE_RE.search(query)
-    if inline:
-        clause_id = _normalize_clause_id(inline.group(1))
-    else:
-        clause_match = CLAUSE_RE.search(query)
-        if clause_match:
-            clause_id = _normalize_clause_id(clause_match.group(1))
+    clause_id = _detect_clause_id(query)
 
     return {
         "unit_type": unit_type,

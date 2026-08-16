@@ -157,11 +157,9 @@
                         :disabled="isLoading">
                         <span x-show="!isLoading">Search</span>
                         <span x-show="isLoading" class="flex items-center gap-2">
-                            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4" />
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                            </svg>
+                            <span class="scale-loader-beam inline-flex" aria-hidden="true">
+                                <i data-lucide="scale" class="w-4 h-4"></i>
+                            </span>
                             Searching…
                         </span>
                     </button>
@@ -185,6 +183,19 @@
 
         <!-- ── RESULTS AREA ──────────────────────────────────────── -->
         <div x-show="hasSearched" class="mt-8 w-full max-w-3xl mx-auto">
+
+            <div x-show="isLoading" class="flex flex-col items-center justify-center py-20">
+                <span class="scale-loader scale-loader--lg" aria-hidden="true">
+                    <span class="scale-loader-dot"></span>
+                    <span class="scale-loader-beam">
+                        <i data-lucide="scale" class="w-12 h-12 text-[#007A5E]"></i>
+                    </span>
+                    <span class="scale-loader-dot scale-loader-dot--opp"></span>
+                </span>
+                <p class="text-sm text-gray-400 mt-5 font-medium">Weighing the legal texts…</p>
+            </div>
+
+            <div x-show="!isLoading">
 
             <p class="text-sm text-gray-400 mb-3" x-text="`Took ${searchTime}s`"></p>
 
@@ -254,6 +265,8 @@
                     Effectiveness Metrics
                 </a>
             </div>
+
+            </div><!-- end !isLoading -->
         </div>
     </main>
 
@@ -308,65 +321,10 @@
         </div>
     </footer>
 
-    <!-- ── SIDEBAR ────────────────────────────────────────────────── -->
-    <div x-show="showSidebar" x-cloak class="fixed inset-0 z-[90]">
-        <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/40"
-            x-show="showSidebar"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-            @click="showSidebar = false"></div>
+    {% include 'partials/sidebar.html' %}
 
-        <!-- Drawer -->
-        <aside class="absolute left-0 top-0 h-full w-80 bg-white shadow-2xl flex flex-col"
-            x-show="showSidebar"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="-translate-x-full"
-            x-transition:enter-end="translate-x-0"
-            x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="translate-x-0"
-            x-transition:leave-end="-translate-x-full"
-            @click.stop>
-
-            <div class="flex items-center justify-between px-5 py-5 border-b border-gray-200">
-                <div class="flex items-center gap-3">
-                    <i data-lucide="scale" class="w-6 h-6 text-[#007A5E]"></i>
-                    <span class="font-semibold text-[#007A5E]">Legal Tools</span>
-                </div>
-                <button type="button" @click="showSidebar = false"
-                    class="text-gray-400 hover:text-gray-700 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-                <template x-for="feature in sidebarFeatures" :key="feature.label">
-                    <button type="button" @click="handleSidebarFeature(feature.action)"
-                        class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors
-                               flex items-center gap-4">
-                        <i :data-lucide="feature.icon" class="w-5 h-5 text-gray-700 shrink-0"></i>
-                        <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-sm text-gray-900 leading-tight" x-text="feature.label"></p>
-                            <p class="text-xs text-gray-400 mt-0.5 leading-relaxed" x-text="feature.description"></p>
-                        </div>
-                    </button>
-                </template>
-            </nav>
-
-            <div class="px-5 py-4 border-t border-gray-200">
-                <p class="text-xs text-gray-400 text-center">More tools coming soon</p>
-            </div>
-        </aside>
-    </div>
-
-    <!-- ── ALPINE.JS APP LOGIC ────────────────────────────────────── -->
-    <script>
-        window.APP_LANGUAGES = {{ languages | tojson }};
-    </script>
+    <script type="application/json" id="app-languages">{{ languages | tojson }}</script>
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/search.js') }}"></script>
 
 </body>

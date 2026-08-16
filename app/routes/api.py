@@ -3,6 +3,7 @@ from src.evaluation import get_metrics
 from src.diagnostic import get_system_data
 from src.tfidf_search import search as tfidf_search
 from src.utils import transform_result
+from src.legal_templates import CATEGORIES, TEMPLATES
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -81,6 +82,14 @@ def translate_text():
     except Exception as e:
         current_app.logger.exception("Translation failed")
         return jsonify({"error": str(e)}), 500
+
+
+@api_bp.route('/templates')
+def templates():
+    return jsonify({
+        "categories": CATEGORIES,
+        "templates": TEMPLATES,
+    })
 
 
 @api_bp.route('/metrics')

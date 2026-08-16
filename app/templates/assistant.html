@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal AI Assistant — LexAfrique</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/assistant.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--primary)',
+                        secondary: 'var(--secondary)',
+                        accent: 'var(--accent)',
+                        muted: 'var(--muted)',
+                        'muted-foreground': 'var(--muted-foreground)',
+                    },
+                    borderRadius: { 'xl': 'var(--radius)' }
+                }
+            }
+        }
+    </script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-[#F8F9FA] h-screen overflow-hidden flex flex-col font-sans"
+    x-data="assistantApp()" x-init="init()"
+    @keydown.escape.window="modePickerOpen = false">
+
+    <div class="page-enter flex flex-col h-full min-h-0">
+
+        <!-- ── HEADER ─────────────────────────────────────────────── -->
+        <header class="bg-white border-b border-gray-200 shadow-sm shrink-0">
+            <div class="px-4 py-4 flex items-center gap-3">
+                <a href="/search"
+                    class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[#007A5E]/10 transition-colors shrink-0">
+                    <i data-lucide="arrow-left" class="w-5 h-5 text-gray-600"></i>
+                </a>
+                <i data-lucide="sparkles" class="w-5 h-5 text-[#007A5E] shrink-0"></i>
+                <div>
+                    <p class="font-semibold text-[#007A5E] leading-tight">Legal AI Assistant</p>
+                    <p class="text-xs text-gray-400">Advice · Drafting · Fact-checking</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- ── MESSAGES / WELCOME ─────────────────────────────────── -->
+        <div class="flex-1 overflow-y-auto px-4 py-6 min-h-0">
+            <div class="max-w-3xl mx-auto">
+
+                <!-- Welcome — shown only when no messages yet -->
+                <div x-show="!hasMessages" class="welcome-enter text-center mb-10 pt-6">
+                    <div class="welcome-icon w-16 h-16 rounded-2xl bg-[#007A5E]/10 flex items-center justify-center mx-auto mb-5">
+                        <i data-lucide="sparkles" class="w-8 h-8 text-[#007A5E]"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">How can I help you today?</h1>
+                    <p class="text-gray-500 text-sm max-w-sm mx-auto">
+                        Ask a legal question, request a document draft, or fact-check a claim.
+                        Use the mode picker in the input to switch context.
+                    </p>
+
+                    <div class="mt-8 space-y-5 text-left max-w-xl mx-auto">
+                        <template x-for="(svc, si) in services" :key="svc.id">
+                            <div class="hint-group" :style="`animation-delay: ${0.1 + si * 0.08}s`">
+                                <p class="text-xs font-semibold mb-2 flex items-center gap-1.5" :class="svc.color">
+                                    <i :data-lucide="svc.icon" class="w-4 h-4"></i>
+                                    <span x-text="svc.label"></span>
+                                </p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <template x-for="hint in svc.hints" :key="hint">
+                                        <button type="button" @click="useHint(svc.id, hint)"
+                                            class="text-left text-xs text-gray-800 border border-gray-200 bg-white rounded-xl px-3 py-2.5
+                                                   hover:border-[#007A5E]/40 hover:bg-[#007A5E]/[0.03] transition leading-relaxed">
+                                            <span x-text="hint"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Chat messages -->
+                <div class="space-y-5">
+                    <template x-for="msg in messages" :key="msg.id">
+                        <div class="msg-enter flex gap-3" :class="msg.role === 'user' ? 'flex-row-reverse' : ''">
+                            <template x-if="msg.role === 'assistant'">
+                                <div class="w-8 h-8 rounded-full bg-[#007A5E] flex items-center justify-center shrink-0 mt-1">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+                                </div>
+                            </template>
+                            <template x-if="msg.role === 'user'">
+                                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0 mt-1">
+                                    <span class="text-xs font-bold text-gray-600">U</span>
+                                </div>
+                            </template>
+
+                            <div class="max-w-[78%] flex flex-col"
+                                :class="msg.role === 'user' ? 'items-end' : 'items-start'">
+                                <span x-show="msg.role === 'user'"
+                                    class="text-[10px] font-semibold mb-1 flex items-center gap-1"
+                                    :class="serviceById(msg.mode).color">
+                                    <i :data-lucide="serviceById(msg.mode).icon" class="w-3 h-3"></i>
+                                    <span x-text="serviceById(msg.mode).label"></span>
+                                </span>
+                                <div class="rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm"
+                                    :class="msg.role === 'user'
+                                        ? 'bg-[#007A5E] text-white rounded-tr-sm'
+                                        : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm'"
+                                    x-html="formatMessage(msg.text)">
+                                </div>
+                                <span class="text-[10px] text-gray-400 mt-1 px-1"
+                                    x-text="formatTime(msg.timestamp)"></span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Balancing scale loading indicator -->
+                    <div x-show="loading" x-cloak class="msg-enter flex gap-3">
+                        <div class="w-8 h-8 rounded-full bg-[#007A5E] flex items-center justify-center shrink-0">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-5 py-3.5 shadow-sm">
+                            <span class="scale-loader" aria-hidden="true">
+                                <span class="scale-loader-dot"></span>
+                                <span class="scale-loader-beam">
+                                    <i data-lucide="scale" class="w-5 h-5 text-[#007A5E]"></i>
+                                </span>
+                                <span class="scale-loader-dot scale-loader-dot--opp"></span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div x-ref="messagesEnd"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── INPUT BAR ──────────────────────────────────────────── -->
+        <div class="bg-white border-t border-gray-200 px-4 py-4 shrink-0">
+            <div class="max-w-3xl mx-auto">
+                <form @submit.prevent="sendMessage(input)">
+                    <div class="flex items-end gap-2 border-2 border-[#007A5E]/20 focus-within:border-[#007A5E]
+                                rounded-full shadow-md bg-white px-3 py-2 transition-colors">
+
+                        <!-- Mode picker -->
+                        <div class="relative shrink-0 self-end pb-0.5" @click.outside="modePickerOpen = false">
+                            <button type="button" @click="modePickerOpen = !modePickerOpen"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold
+                                       transition hover:opacity-80"
+                                :class="[activeService.border, activeService.bg, activeService.color]">
+                                <span x-show="mode === 'advice'" class="inline-flex">
+                                    <i data-lucide="scale" class="w-4 h-4"></i>
+                                </span>
+                                <span x-show="mode === 'drafting'" class="inline-flex">
+                                    <i data-lucide="gavel" class="w-4 h-4"></i>
+                                </span>
+                                <span x-show="mode === 'misinfo'" class="inline-flex">
+                                    <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                                </span>
+                                <span class="hidden sm:inline" x-text="activeService.label"></span>
+                            </button>
+
+                            <div x-show="modePickerOpen" x-cloak
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                                class="absolute bottom-full left-0 mb-2 bg-white rounded-2xl shadow-xl
+                                       border border-gray-200 overflow-hidden z-20 w-56">
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide px-4 pt-3 pb-1">
+                                    Switch mode
+                                </p>
+                                <template x-for="svc in services" :key="svc.id">
+                                    <button type="button" @click="selectMode(svc.id)"
+                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-gray-50"
+                                        :class="mode === svc.id ? `font-semibold ${svc.color}` : 'text-gray-800'">
+                                        <span :class="svc.color">
+                                            <i :data-lucide="svc.icon" class="w-4 h-4"></i>
+                                        </span>
+                                        <span x-text="svc.label"></span>
+                                        <span x-show="mode === svc.id"
+                                            class="ml-auto w-1.5 h-1.5 rounded-full bg-current opacity-60"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <textarea x-ref="textarea" x-model="input"
+                            @input="autoResize($event.target)"
+                            @keydown="handleKeyDown($event)"
+                            :placeholder="activeService.placeholder"
+                            rows="1"
+                            class="assistant-input flex-1 resize-none bg-transparent text-sm leading-relaxed
+                                   py-1.5 min-h-[36px] max-h-32 placeholder:text-gray-400"></textarea>
+
+                        <button type="submit"
+                            :disabled="!input.trim() || loading"
+                            class="bg-[#007A5E] hover:brightness-110 rounded-full h-9 w-9 p-0 shrink-0
+                                   self-end flex items-center justify-center disabled:opacity-40 transition-all">
+                            <i data-lucide="send" class="w-4 h-4 text-white"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <p class="text-[10px] text-gray-400 text-center mt-2">
+                    LexAfrique AI draws from verified legal texts. Always consult a qualified lawyer for binding legal decisions.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
+</body>
+
+</html>
