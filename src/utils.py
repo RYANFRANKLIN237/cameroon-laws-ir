@@ -180,7 +180,7 @@ def get_unit_metadata_lookup(granularity: str = "clause") -> dict:
     return _UNIT_METADATA_CACHE[granularity]
 
 
-def transform_result(raw: dict, rank: int, query: str, granularity: str = "clause") -> dict:
+def transform_result(raw: dict, rank: int, query: str, granularity: str = "clause", include_refs: bool = True) -> dict:
     """
     Converts a raw result from tfidf_search.search() into the display
     format expected by the UI.
@@ -201,6 +201,19 @@ def transform_result(raw: dict, rank: int, query: str, granularity: str = "claus
         or (" ".join(text.split())[:100] if text else "")
     )
 
+    refs = []
+    if include_refs and text:
+        from src.citation_lookup import resolve_inline_refs
+        from src.cross_ref_parser import find_cross_refs
+
+        spans = find_cross_refs(text)
+        refs = resolve_inline_refs(
+            raw["unit_id"],
+            text,
+            spans,
+            granularity=granularity,
+        )
+
     return {
         "id":          rank,
         "rank":        rank,
@@ -220,6 +233,8 @@ def transform_result(raw: dict, rank: int, query: str, granularity: str = "claus
         "highlight_quote": highlight_quote,
         "source_pdf":    meta.get("source_pdf", ""),
         "citation_match": raw.get("citation_match", ""),
+        "unit_id":       raw["unit_id"],
+        "refs":          refs,
     }
 
 

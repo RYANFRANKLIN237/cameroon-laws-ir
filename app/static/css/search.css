@@ -34,3 +34,42 @@ input:focus {
     opacity: 0;
     /* prevent flash before animation fires */
 }
+
+/* Cross-reference link styling */
+.xref-link {
+    color: #007A5E !important;
+    text-decoration: underline !important;
+    text-decoration-color: #007A5E !important;
+    text-underline-offset: 2px;
+    background: none !important;
+    border: none !important;
+    cursor: pointer;
+    padding: 0;
+    font-size: inherit;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.xref-link:hover {
+    color: #00664d !important;
+}
+
+/* Ensure yellow highlighting takes priority over xref links */
+mark {
+    background-color: var(--secondary) !important;
+    color: #000 !important;
+    padding: 2px 4px !important;
+    border-radius: 4px !important;
+}
+
+/* Yellow highlighting inside xref links should still be visible */
+.xref-link mark {
+    background-color: var(--secondary) !important;
+    color: #000 !important;
+}
+
+/* For the bg-yellow-300 class used in highlightText */
+.bg-yellow-300 {
+    background-color: var(--secondary) !important;
+    color: #000 !important;
+}
