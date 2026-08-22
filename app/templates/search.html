@@ -233,10 +233,13 @@
                             </button>
                         </div>
 
-                        <p class="text-gray-700 leading-relaxed mb-4" x-html="translatedIds.has(result.id) && result.translation
-                               ? highlightText(result.translation, result.highlight)
-                               : highlightText(result.content, result.highlight)">
-                        </p>
+                        <p class="text-gray-700 leading-relaxed mb-4" x-html="renderContentWithRefs(
+                            translatedIds.has(result.id) && result.translation ? result.translation : result.content,
+                            result.refs,
+                            result.id,
+                            translatedIds.has(result.id),
+                            result.highlight
+                        )"></p>
 
                         <div class="flex items-center gap-2 text-sm text-gray-400 flex-wrap">
                             <i data-lucide="file-text" class="w-4 h-4 flex-shrink-0"></i>
@@ -254,6 +257,44 @@
                                 Translated
                             </span>
                         </div>
+
+                        <!-- Cross-reference expansion card -->
+                        <template x-for="(ref, refIndex) in (result.refs || [])" :key="refIndex">
+                            <div x-show="expandedRefs[result.id] === refIndex"
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0 max-h-0"
+                                x-transition:enter-end="opacity-100 max-h-96"
+                                x-transition:leave="transition ease-in duration-200"
+                                x-transition:leave-start="opacity-100 max-h-96"
+                                x-transition:leave-end="opacity-0 max-h-0"
+                                class="mt-4 overflow-hidden border-t-2 border-[#007A5E]/20 bg-[#007A5E]/5 rounded-b-xl">
+                                <div class="px-4 py-3">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-1 h-4 bg-[#007A5E] rounded-full"></span>
+                                            <div>
+                                                <p class="text-xs font-semibold text-[#007A5E] uppercase tracking-wide">Cross-reference</p>
+                                                <p class="text-sm font-semibold text-gray-900" x-text="ref.target_title"></p>
+                                            </div>
+                                        </div>
+                                        <button @click="toggleRefExpansion(result.id, refIndex)"
+                                            class="text-gray-400 hover:text-gray-600 transition p-1 rounded-lg hover:bg-white">
+                                            <i data-lucide="chevron-up" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                    <div x-show="ref.isLoading" class="text-sm text-gray-400 py-2">
+                                        Loading...
+                                    </div>
+                                    <div x-show="!ref.isLoading && ref.expandedData"
+                                        class="text-sm text-gray-700 leading-relaxed bg-white rounded-lg px-3 py-2 border border-[#007A5E]/10 shadow-sm">
+                                        <p x-text="ref.expandedData.content"></p>
+                                    </div>
+                                    <p x-show="!ref.isLoading && ref.expandedData"
+                                        class="text-xs text-gray-400 mt-2 text-right"
+                                        x-text="ref.expandedData.source"></p>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </template>
             </div>

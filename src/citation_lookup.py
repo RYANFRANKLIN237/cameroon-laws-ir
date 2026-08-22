@@ -292,3 +292,125 @@ def lookup_citation(
         })
 
     return results
+
+
+def _sibling_records(index: CitationIndex, current: dict) -> list[dict]:
+    unit_key = (
+        current["source_norm"],
+        current["unit_type"],
+        current["unit_number"],
+    )
+    siblings = _sort_records(index.by_unit.get(unit_key, []))
+    numbered = [r for r in siblings if r["clause_id"] != "full"]
+    return numbered or siblings
+
+
+def _pick_relative_target(
+    index: CitationIndex,
+    current: dict,
+    relative: str,
+) -> Optional[dict]:
+    siblings = _sibling_records(index, current)
+    if not siblings:
+        return None
+
+    ids = [r["unit_id"] for r in siblings]
+    try:
+        pos = ids.index(current["unit_id"])
+    except ValueError:
+        pos = 0
+
+    if relative == "previous":
+        if pos > 0:
+            return siblings[pos - 1]
+        return None
+    if relative == "next":
+        if pos + 1 < len(siblings):
+            return siblings[pos + 1]
+        return None
+
+    # parent: prefer clause_full, else first sibling
+    unit_key = (
+        current["source_norm"],
+        current["unit_type"],
+        current["unit_number"],
+    )
+    for record in index.by_unit.get(unit_key, []):
+        if record["clause_id"] == "full":
+            return record
+    return siblings[0] if siblings else None
+
+
+def _title_for_record(record: dict) -> str:
+    base = f"{record['unit_type'].capitalize()} {record['unit_number']}"
+    if record["clause_id"] == "full":
+        return base
+    return f"{base} Sub {record['clause_id']}"
+
+
+def resolve_inline_refs(
+    unit_id: str,
+    text: str,
+    spans: list[dict],
+    granularity: str = "clause",
+) -> list[dict]:
+    """
+    Bind detector spans to unit files. Unresolved spans are dropped
+    (no broken links). Never returns a self-link.
+    """
+    current = _parse_filename(unit_id)
+    if not current or not spans:
+        return []
+
+    index = get_citation_index(granularity)
+    resolved = []
+
+    for span in spans:
+        target = None
+        match_kind = "none"
+
+        relative = span.get("relative")
+        if relative:
+            target = _pick_relative_target(index, current, relative)
+            if target:
+                match_kind = "parent" if relative == "parent" else relative
+        else:
+            unit_type = span.get("unit_type") or current["unit_type"]
+            unit_number = span.get("unit_number") or current["unit_number"]
+            clause_id = span.get("clause_id")
+
+            statute_key = span.get("statute_key")
+            if statute_key:
+                sources = index.resolve_sources(statute_key)
+            else:
+                sources = [current["source_norm"]]
+
+            if not sources:
+                continue
+
+            records, match_kind = _lookup_on_sources(
+                index,
+                sources,
+                unit_type,
+                unit_number,
+                clause_id,
+            )
+            if records:
+                target = records[0]
+
+        if not target:
+            continue
+        if target["unit_id"] == unit_id:
+            continue
+
+        resolved.append({
+            "start": span["start"],
+            "end": span["end"],
+            "surface": span["surface"],
+            "target_unit_id": target["unit_id"],
+            "target_title": _title_for_record(target),
+            "match_kind": match_kind,
+            "kind": span.get("kind") or "citation",
+        })
+
+    return resolved

@@ -98,7 +98,7 @@ CLAUSE_RE = re.compile(
 )
 
 
-def _normalize_unit_number(raw: str) -> str:
+def normalize_unit_number(raw: str) -> str:
     value = raw.strip().lower()
     value = unicodedata.normalize("NFKD", value)
     value = "".join(ch for ch in value if not unicodedata.combining(ch))
@@ -107,7 +107,7 @@ def _normalize_unit_number(raw: str) -> str:
     return re.sub(r"^0+(\d)", r"\1", value)
 
 
-def _normalize_clause_id(raw: Optional[str]) -> Optional[str]:
+def normalize_clause_id(raw: Optional[str]) -> Optional[str]:
     if not raw:
         return None
     value = raw.strip().lower()
@@ -138,12 +138,12 @@ def _normalize_clause_id(raw: Optional[str]) -> Optional[str]:
 def _detect_clause_id(query: str) -> Optional[str]:
     inline = INLINE_CLAUSE_RE.search(query)
     if inline:
-        return _normalize_clause_id(inline.group(1))
+        return normalize_clause_id(inline.group(1))
 
     for text in (query, normalize_text(query)):
         clause_match = CLAUSE_RE.search(text)
         if clause_match:
-            return _normalize_clause_id(clause_match.group(1))
+            return normalize_clause_id(clause_match.group(1))
     return None
 
 
@@ -188,7 +188,7 @@ def parse_citation(query: str) -> Optional[dict]:
         return None
 
     unit_type = _detect_unit_type(query) or "section"
-    unit_number = _normalize_unit_number(unit_match.group(1))
+    unit_number = normalize_unit_number(unit_match.group(1))
     clause_id = _detect_clause_id(query)
 
     return {

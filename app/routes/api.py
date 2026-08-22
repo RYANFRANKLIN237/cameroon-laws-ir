@@ -2,8 +2,9 @@ from flask import Blueprint, request, jsonify, current_app
 from src.evaluation import get_metrics
 from src.diagnostic import get_system_data
 from src.tfidf_search import search as tfidf_search
-from src.utils import transform_result
+from src.utils import transform_result, CONFIG
 from src.legal_templates import CATEGORIES, TEMPLATES
+import os
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -132,3 +133,50 @@ def metrics():
     response.headers["Cache-Control"] = "no-store"
 
     return response
+
+
+@api_bp.route('/unit')
+def get_unit():
+    """
+    Get a single unit by unit_id with transform_result-like payload.
+    Used for lazy expansion of cross-references.
+    """
+    unit_id = request.args.get('id', '').strip()
+    if not unit_id:
+        return jsonify({"error": "Missing unit_id"}), 400
+
+    granularity = request.args.get('granularity', 'clause')
+    legal_dir = CONFIG[granularity]["legal_dir"]
+    unit_path = os.path.join(legal_dir, unit_id)
+
+    if not os.path.exists(unit_path):
+        return jsonify({"error": "Unit not found"}), 404
+
+    try:
+        with open(unit_path, 'r', encoding='utf-8') as f:
+            text = f.read().strip()
+    except Exception as e:
+        current_app.logger.error(f"Failed to read unit {unit_id}: {e}")
+        return jsonify({"error": "Failed to read unit"}), 500
+
+    # Build a minimal raw result dict for transform_result
+    from src.legal_metadata import infer_law_type, infer_unit_type
+    raw_result = {
+        "unit_id": unit_id,
+        "score": 1.0,
+        "final_score": 1.0,
+        "text": text,
+        "law_type": infer_law_type(unit_id),
+        "unit_type": infer_unit_type(unit_id),
+    }
+
+    # Use transform_result to get the full display format
+    display_result = transform_result(
+        raw_result,
+        rank=1,
+        query="",  # No query needed for unit lookup
+        granularity=granularity,
+        include_refs=False  # Don't re-compute refs for the target unit
+    )
+
+    return jsonify(display_result)
