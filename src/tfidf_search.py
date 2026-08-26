@@ -231,24 +231,19 @@ def search_single_language(
         resources
     )
 
-    tfidf_scores_global = cosine_similarity(
-        query_vector,
-        tfidf_matrix
-    )[0]
+    
 
     if candidate_indices:
 
         candidate_indices = set(candidate_indices)
-
-        fallback_indices = np.argsort(
-            tfidf_scores_global
-        )[::-1][:100]
-
-        candidate_indices.update(fallback_indices)
-
         candidate_indices = list(candidate_indices)
 
     else:
+
+        tfidf_scores_global = cosine_similarity(
+            query_vector,
+            tfidf_matrix
+        )[0]
 
         candidate_indices = np.argsort(
             tfidf_scores_global
