@@ -124,6 +124,14 @@ def _statute_near(text: str, start: int, end: int) -> Optional[str]:
     return _detect_statute_key(window)
 
 
+def _is_line_start_heading(text: str, start: int) -> bool:
+    """True if this match is a section/article label at the start of a line."""
+    i = start - 1
+    while i >= 0 and text[i] in " \t":
+        i -= 1
+    return i < 0 or text[i] == "\n"
+
+
 def _dedupe_spans(spans: list[dict]) -> list[dict]:
     spans.sort(key=lambda s: (s["start"], -(s["end"] - s["start"])))
     kept = []
@@ -144,6 +152,8 @@ def find_cross_refs(text: str) -> list[dict]:
     spans: list[dict] = []
 
     for match in NUMBERED_UNIT_RE.finditer(text):
+        if _is_line_start_heading(text, match.start()):
+            continue
         surface = match.group(0)
         unit_type = _unit_type_from_surface(surface) or "section"
         spans.append({
